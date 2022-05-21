@@ -8,6 +8,7 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
 {
+	//Adding comment from macbook to see if it runs after pushs
 	// Create the Game object using
 	 // the app handle we got from WinMain
 	DX11App dxGame(hInstance,1280,720);
