@@ -1,13 +1,16 @@
 //Code from Microsoft documentation: https://docs.microsoft.com/en-us/windows/win32/learnwin32/your-first-windows-program
+//And Chris Cascioli's resources from IGME 540 at RIT
+//Make sure that linker>system>subsystem is set to WINDOWS not CONSOLE 
 #ifndef UNICODE
 #define UNICODE
 #endif 
-
-#include <windows.h>
 #include "DX11App.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
 {
+	/*code in here was all copied & pasted from Chris's starter code, only modification is that
+	DX11App is created instead of game*/
+
 	//Adding comment from macbook to see if it runs after pushs
 	// Create the Game object using
 	 // the app handle we got from WinMain
