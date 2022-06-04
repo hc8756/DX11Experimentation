@@ -1,5 +1,5 @@
-//Code from Microsoft documentation: https://docs.microsoft.com/en-us/windows/win32/learnwin32/your-first-windows-program
-//And Chris Cascioli's resources from IGME 540 at RIT
+//From Chris Cascioli's resources from IGME 540 at RIT
+//Microsoft documentation: https://docs.microsoft.com/en-us/windows/win32/learnwin32/your-first-windows-program
 //Make sure that linker>system>subsystem is set to WINDOWS not CONSOLE 
 #ifndef UNICODE
 #define UNICODE

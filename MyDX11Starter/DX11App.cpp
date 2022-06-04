@@ -1,9 +1,8 @@
 #include "DX11App.h"
-
 DX11App* DX11App::DX11AppInstance = 0;
-
 // For the DirectX Math library
 using namespace DirectX;
+
 DX11App::DX11App(HINSTANCE hInstance, unsigned int wndWidth, unsigned int wndHeight)
 {
     //Set reference to self
@@ -218,6 +217,7 @@ void DX11App::CreateBasicGeometry()
     XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
     XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
     XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+    //Vertices are defined in vertex.h file
     Vertex vertices[] =
     {
         { XMFLOAT3(+0.0f, +0.5f, +0.0f), red },
