@@ -111,7 +111,7 @@ HRESULT DX11App::InitDirectX()
     DXGI_SWAP_CHAIN_DESC scDesc = {};
     scDesc.Windowed = TRUE;
     scDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;//this allows buffers to be used as drawing surface 
     scDesc.BufferCount = 2;
     scDesc.SampleDesc.Count = 1;
     scDesc.SampleDesc.Quality = 0;
@@ -135,17 +135,20 @@ HRESULT DX11App::InitDirectX()
         deviceContext.GetAddressOf());	//pointer to device context variable
     if (FAILED(hr)) return hr;
 
-    /*Above function created Direct3D objects & resources
-    among which is the back buffer texture (something to draw pixels onto)
-    this function places that texture into our texture variable*/
+    /*Above function created Direct3D objects & resources. 
+    For example, it creates buffers that can be used as drawing surfaces
+    This function places one of those buffers into our backBufferTexture variable*/
     swapChain->GetBuffer(
         0,
+        //uuid of backBufferTexture data type 
         __uuidof(ID3D11Texture2D),
         (void**)&backBufferTexture);
 
-    //Next, we use that texture to create a render target view
     if (backBufferTexture != 0)
     {
+        //We will need to read our backBufferTexture into the swap chain to be drawn onto
+        //to do this, we will need to create a render-target view
+        //In Direct3D, a view is a way to access a specific resource
         device->CreateRenderTargetView(
             backBufferTexture.Get(),
             0,
@@ -153,7 +156,7 @@ HRESULT DX11App::InitDirectX()
         backBufferTexture->Release();
     }
 
-    //Description of texture to use for the depth buffer
+    //Description of texture to use for the depth-stencil buffer
     D3D11_TEXTURE2D_DESC depthStencilDesc = {};
     depthStencilDesc.Width = wndWidth;
     depthStencilDesc.Height = wndHeight;
@@ -167,10 +170,11 @@ HRESULT DX11App::InitDirectX()
     depthStencilDesc.SampleDesc.Count = 1;
     depthStencilDesc.SampleDesc.Quality = 0;
 
-    //Create the depth buffer and its view
+    //Create the depth-stencil buffer texture
     device->CreateTexture2D(&depthStencilDesc, 0, &depthBufferTexture);
     if (depthBufferTexture != 0)
     {
+        //Create a depth-stencil view
         device->CreateDepthStencilView(
             depthBufferTexture.Get(),
             0,
@@ -178,15 +182,14 @@ HRESULT DX11App::InitDirectX()
         depthBufferTexture->Release();
     }
 
-    // Bind the views to the pipeline, so rendering properly 
-    // uses their underlying textures
+    // Bind thse views to the pipeline
     deviceContext->OMSetRenderTargets(
         1,
         backBufferRTV.GetAddressOf(),
         depthStencilView.Get());
 
     // Lastly, set up a viewport so we render into
-    // to correct portion of the window
+    // the viewport is the section of the backbuffer texture that we want to show on the screen
     D3D11_VIEWPORT viewport = {};
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
@@ -247,7 +250,6 @@ void DX11App::CreateBasicGeometry()
 
 }
 
-//This function was copied and pasted straight from Chris's code 
 void DX11App::LoadShaders()
 {
     // Blob for reading raw data
@@ -296,8 +298,6 @@ void DX11App::LoadShaders()
         shaderBlob->GetBufferSize(),	// Size of the shader code that uses this layout
         inputLayout.GetAddressOf());	// Address of the resulting ID3D11InputLayout*
 
-
-
     // Read and create the pixel shader
     //  - Reusing the same blob here, since we're done with the vert shader code
     D3DReadFileToBlob(
@@ -345,9 +345,11 @@ void DX11App::Draw(float deltaTime, float totalTime)
     deviceContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
     //Start the rendering pipeline
+    //There are several other "Draw" functions that can do this
+    //But DrawIndexed is the most common- it requires you to have bound a buffer of vertices & their indices to the pipeline
     deviceContext->DrawIndexed(
         3,//number of indices to use 
-        0,    
+        0,//this and next param are offset values, both being 0 means you start at first index and then go through each of them in order     
         0);    
     //}end hypothetical for loop
 

@@ -83,8 +83,12 @@ private:
 	//Buffers to hold mesh data
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
+	//Shader related data
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
-	/*Direct3D device metadata and device resource metadata*/
+	/*Direct3D device metadata*/
 	D3D_FEATURE_LEVEL dxFeatureLevel;
 	
 	/*Related to timer*/
@@ -95,12 +99,6 @@ private:
 	__int64 currentTime;
 	__int64 prevTime;
 	void UpdateTimer();//called once a frame
-
-	/*Not covered yet from here*/
-	/*Shader related data*/
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
 	/*Path getting stuff*/
 	std::string GetExePath();
