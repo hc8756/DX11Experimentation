@@ -1,6 +1,6 @@
 #include "DX11App.h"
 DX11App* DX11App::DX11AppInstance = 0;
-// For the DirectX Math library
+//For the DirectX Math library
 using namespace DirectX;
 
 DX11App::DX11App(HINSTANCE hInstance, unsigned int wndWidth, unsigned int wndHeight)
@@ -18,12 +18,9 @@ DX11App::DX11App(HINSTANCE hInstance, unsigned int wndWidth, unsigned int wndHei
     startTime = 0;
     currentTime = 0;
     prevTime = 0;
-    //Create variable to hold timer frequency
-    _int64 freq;
-    //This function takes pointer to large int and fills with counts/sec
-    QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
-    //Inverse is secs/count
-    secsInCount = 1.0 / (double)freq;
+    _int64 freq;//create variable to hold timer frequency
+    QueryPerformanceFrequency((LARGE_INTEGER*)&freq);//this function takes pointer to large int and fills with counts/sec
+    secsInCount = 1.0 / (double)freq;//inverse is secs/count
 }
 
 DX11App::~DX11App()
@@ -34,19 +31,21 @@ DX11App::~DX11App()
 
 HRESULT DX11App::InitWindow()
 {
-    //Register instance of WNDCLASS
-    WNDCLASS wndClass = {}; //zero out
-    wndClass.style = CS_HREDRAW | CS_VREDRAW; //redraw at horizontal or vertical adjustment
-    wndClass.lpfnWndProc = DX11App::StaticWindowProc;
+    //Fill out a window class struct
+    //Microsoft Documentation: https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-wndclassw
+    WNDCLASS wndClass = {};//zero out
+    wndClass.style = CS_HREDRAW | CS_VREDRAW;//redraw at horizontal or vertical adjustment
+    wndClass.lpfnWndProc = DX11App::StaticWindowProc;//pointer to the message processing function you created
     wndClass.cbClsExtra = 0;
     wndClass.cbWndExtra = 0;
-    wndClass.hInstance = hInstance;
-    wndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION); //default
-    wndClass.hCursor = LoadCursor(NULL, IDC_ARROW); //default
-    wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wndClass.hInstance = hInstance;//handle to app that contains the message processing function
+    wndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);//default
+    wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);//default
+    wndClass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
     wndClass.lpszMenuName = NULL;
     wndClass.lpszClassName = L"DX11AppWindowClass";
 
+    //Make sure window class has been registered
     if (!RegisterClass(&wndClass))
     {
         DWORD dwError = GetLastError();
@@ -54,17 +53,13 @@ HRESULT DX11App::InitWindow()
             return HRESULT_FROM_WIN32(dwError);
     }
 
-    /*Create window with CreateWindow function.
-    This function will return a HWND, which is a pointer to a window.
-    Reference this HWND when you need to reference window*/
-    
-    //Create rectangle and adjust window to fit in it
+    //Create rectangle w/ param values and adjust window setting to fit in it
     RECT wndRect;
     SetRect(&wndRect, 0, 0, wndWidth, wndHeight);
     AdjustWindowRect(
         &wndRect,
         WS_OVERLAPPEDWINDOW,
-        false //no menu
+        false//no menu
     );
 
     //Get (x,y) that will position window at center of screen
@@ -73,17 +68,19 @@ HRESULT DX11App::InitWindow()
     int x= (screenRect.right / 2) - (wndRect.right / 2);
     int y = (screenRect.bottom / 2) - (wndRect.bottom / 2);
 
-    //Create the window for our viewport.
+    //Use everything you've done so far in this function to create the window
+    //This function will return a HWND, which is a pointer to a window
+    //Reference this HWND when you need to reference window
     hWnd = CreateWindow(
         wndClass.lpszClassName,
         L"DirectX11 Application",
         WS_OVERLAPPEDWINDOW,
         x, y,
-        (wndRect.right - wndRect.left), (wndRect.bottom - wndRect.top), //calculated width and height
+        (wndRect.right - wndRect.left), (wndRect.bottom - wndRect.top),//calculated width and height
         0,
-        0, //no menu
+        0,//no menu
         hInstance,
-        0 //only one window
+        0//only one window
     );
 
     //Check that everything went right
@@ -93,11 +90,10 @@ HRESULT DX11App::InitWindow()
         return HRESULT_FROM_WIN32(dwError);
     }
 
-    // The window exists but is not visible yet
-    // We need to tell Windows to show it, and how to show it
+    //Show window we created
     ShowWindow(hWnd, SW_SHOW);
 
-    // Initialize the input manager now that we definitely have a window
+    //Initialize the input manager
     Input::GetInstance().Initialize(hWnd);
     return S_OK;
 }
@@ -121,34 +117,34 @@ HRESULT DX11App::InitDirectX()
     //Attempt Direct3D initialization & return failure if something goes wrong
     HRESULT hr = S_OK;
     hr = D3D11CreateDeviceAndSwapChain(
-        0,							//default values
+        0,//default values...
         D3D_DRIVER_TYPE_HARDWARE,	
         0,							
         deviceFlags,				
         0,							
         0,							
-        D3D11_SDK_VERSION,			//up to here
-        &scDesc,					//address of swap chain description
-        swapChain.GetAddressOf(),	//pointer to swap chain variable
-        device.GetAddressOf(),		//pointer to device variable
+        D3D11_SDK_VERSION,//...up to here
+        &scDesc,//address of swap chain description
+        swapChain.GetAddressOf(),//address of swap chain variable
+        device.GetAddressOf(),//address of device variable
         &dxFeatureLevel,			
-        deviceContext.GetAddressOf());	//pointer to device context variable
+        deviceContext.GetAddressOf());//address of device context variable
     if (FAILED(hr)) return hr;
 
-    /*Above function created Direct3D objects & resources. 
-    For example, it creates buffers that can be used as drawing surfaces
-    This function places one of those buffers into our backBufferTexture variable*/
+    //Above function created Direct3D objects & resources 
+    //For example, it creates buffers that can be used as drawing surfaces
+    //This function places one of those buffers into our backBufferTexture variable
     swapChain->GetBuffer(
         0,
         //uuid of backBufferTexture data type 
         __uuidof(ID3D11Texture2D),
         (void**)&backBufferTexture);
-
+    
+    //We will now need to read our backBufferTexture into the swap chain to be drawn onto
+    //To do this, we will need to create a render-target view and place it in our backBufferRTV variable
+    //In Direct3D, a view is a way to access a specific resource
     if (backBufferTexture != 0)
     {
-        //We will need to read our backBufferTexture into the swap chain to be drawn onto
-        //to do this, we will need to create a render-target view
-        //In Direct3D, a view is a way to access a specific resource
         device->CreateRenderTargetView(
             backBufferTexture.Get(),
             0,
@@ -157,6 +153,7 @@ HRESULT DX11App::InitDirectX()
     }
 
     //Description of texture to use for the depth-stencil buffer
+    //Must be same size as the render target
     D3D11_TEXTURE2D_DESC depthStencilDesc = {};
     depthStencilDesc.Width = wndWidth;
     depthStencilDesc.Height = wndHeight;
@@ -172,24 +169,24 @@ HRESULT DX11App::InitDirectX()
 
     //Create the depth-stencil buffer texture
     device->CreateTexture2D(&depthStencilDesc, 0, &depthBufferTexture);
+    //Create a depth-stencil view
     if (depthBufferTexture != 0)
     {
-        //Create a depth-stencil view
-        device->CreateDepthStencilView(
+       device->CreateDepthStencilView(
             depthBufferTexture.Get(),
             0,
             depthStencilView.GetAddressOf());
         depthBufferTexture->Release();
     }
 
-    // Bind thse views to the pipeline
+    //Bind thse views to the pipeline
     deviceContext->OMSetRenderTargets(
         1,
         backBufferRTV.GetAddressOf(),
         depthStencilView.Get());
 
-    // Lastly, set up a viewport so we render into
-    // the viewport is the section of the backbuffer texture that we want to show on the screen
+    //Set up a viewport
+    //The viewport is the section of the backbuffer texture shown on screen
     D3D11_VIEWPORT viewport = {};
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
@@ -199,19 +196,17 @@ HRESULT DX11App::InitDirectX()
     viewport.MaxDepth = 1.0f;
     deviceContext->RSSetViewports(1, &viewport);
 
-    // Return the "everything is ok" HRESULT value
     return S_OK; 
 }
 
 void DX11App::CreateBasicGeometry()
 {
     //Create the vertex buffer description
-    D3D11_BUFFER_DESC vbd = {}; //the {} initializes struct members to zero 
+    D3D11_BUFFER_DESC vbd = {};  
     //Set relevant buffer description struct members
-    vbd.Usage = D3D11_USAGE_IMMUTABLE; //can we change buffer after creation?->no     
-    vbd.ByteWidth = sizeof(Vertex) * 3; //size of buffer
-    vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER; //tells DirectX buffer type
-    //following are just members you zero 
+    vbd.Usage = D3D11_USAGE_IMMUTABLE;//can we change buffer after creation?->no     
+    vbd.ByteWidth = sizeof(Vertex) * 3;//size of buffer
+    vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;//tells DirectX buffer type
     vbd.CPUAccessFlags = 0;
     vbd.MiscFlags = 0;
     vbd.StructureByteStride = 0;
@@ -220,7 +215,6 @@ void DX11App::CreateBasicGeometry()
     XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
     XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
     XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
-    //Vertices are defined in vertex.h file
     Vertex vertices[] =
     {
         { XMFLOAT3(+0.0f, +0.5f, +0.0f), red },
@@ -232,8 +226,8 @@ void DX11App::CreateBasicGeometry()
     D3D11_SUBRESOURCE_DATA initialVertexData = {};
     initialVertexData.pSysMem = vertices;
 
-    //Create the vertex buffer with addresses to vertex buffer description and vertex buffer itself (declared in header)
-    device->CreateBuffer(&vbd, &initialVertexData, vertexBuffer.GetAddressOf());//GetAddressOf() is how you get address of pointer
+    //Create the vertex buffer
+    device->CreateBuffer(&vbd, &initialVertexData, vertexBuffer.GetAddressOf());
 
     //Then do the same thing for index buffer 
     D3D11_BUFFER_DESC ibd = {};
@@ -247,7 +241,6 @@ void DX11App::CreateBasicGeometry()
     D3D11_SUBRESOURCE_DATA initialIndexData = {};
     initialIndexData.pSysMem = indices;
     device->CreateBuffer(&ibd, &initialIndexData, indexBuffer.GetAddressOf());
-
 }
 
 void DX11App::LoadShaders()
@@ -493,7 +486,7 @@ void DX11App::UpdateTimer()
     prevTime = currentTime;
 }
 
-//Simple message processing function that dsetroys window when user exits out
+//Simple message processing function that destroys window when user exits out
 LRESULT DX11App::StaticWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)

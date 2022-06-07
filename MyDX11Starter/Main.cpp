@@ -1,4 +1,3 @@
-//From Chris Cascioli's resources from IGME 540 at RIT
 //Microsoft documentation: https://docs.microsoft.com/en-us/windows/win32/learnwin32/your-first-windows-program
 //Make sure that linker>system>subsystem is set to WINDOWS not CONSOLE 
 #ifndef UNICODE
@@ -8,29 +7,16 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow)
 {
-	/*code in here was all copied & pasted from Chris's starter code, only modification is that
-	DX11App is created instead of game*/
-
-	//Adding comment from macbook to see if it runs after pushs
-	// Create the Game object using
-	 // the app handle we got from WinMain
+	//Create the DX11APP object
 	DX11App dxGame(hInstance,1280,720);
 
-	// Result variable for function calls below
 	HRESULT hr = S_OK;
-
-	// Attempt to create the window for our program, and
-	// exit early if something failed
 	hr = dxGame.InitWindow();
 	if (FAILED(hr)) return hr;
 
-	// Attempt to initialize DirectX, and exit
-	// early if something failed
 	hr = dxGame.InitDirectX();
 	if (FAILED(hr)) return hr;
 
-	// Begin the message and game loop, and then return
-	// whatever we get back once the game loop is over
 	return dxGame.Run();
 }
 

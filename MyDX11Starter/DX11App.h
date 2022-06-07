@@ -19,7 +19,6 @@
 //Make sure correct libraries are included in VS settings
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
-
 //Include other class headers
 #include "Vertex.h"
 #include "Input.h"
@@ -37,34 +36,32 @@ public:
 		unsigned int wndHeight
 	);
 	~DX11App();
-	/*Main functions*/
+	//Main functions: ones that return HRESULT will be called in Main.cpp
 	HRESULT InitWindow();
 	HRESULT InitDirectX();
 	HRESULT Run();
 	void OnResize();
 
-	/*Static stuff required for OS - level message processing*/
-	//Message processing function
-	static LRESULT CALLBACK StaticWindowProc(
+	//Static stuff required for OS - level message processing
+	static LRESULT CALLBACK StaticWindowProc(//message processing function
 		HWND hWnd,
 		UINT uMsg,
 		WPARAM wParam,
 		LPARAM lParam
 	);
-	//Reference to self
-	static DX11App* DX11AppInstance;
+	static DX11App* DX11AppInstance;//reference to self
 
 private:
 
-	/*Parameters passed in constructor*/
-	//Handle to application
-	HINSTANCE hInstance; 
+	//Parameters passed in constructor
+	HINSTANCE hInstance;//handle to Windows application
 	unsigned int wndWidth;
 	unsigned int wndHeight;
+
 	//Handle to window
 	HWND hWnd;
 
-	/*Functions called by main functions*/
+	//Functions called by main functions
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
 	void CreateBasicGeometry();
@@ -87,11 +84,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
-
-	/*Direct3D device metadata*/
+	//Direct3D device metadata
 	D3D_FEATURE_LEVEL dxFeatureLevel;
 	
-	/*Related to timer*/
+	//Variables related to timer
 	double secsInCount;
 	float totalTime;
 	float deltaTime;
@@ -100,11 +96,12 @@ private:
 	__int64 prevTime;
 	void UpdateTimer();//called once a frame
 
-	/*Path getting stuff*/
+	//Path getting stuff
 	std::string GetExePath();
 	std::wstring GetExePath_Wide();
 	std::string GetFullPathTo(std::string relativeFilePath);
 	std::wstring GetFullPathTo_Wide(std::wstring relativeFilePath);
+	
 	bool vsync;
 };
 
