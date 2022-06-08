@@ -1,9 +1,9 @@
-//Code from Microsoft documentation: 
-//Chapter 4: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/work-with-dxgi
-//Chapter 5: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/understand-the-directx-11-2-graphics-pipeline
-//Chapter 6: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/work-with-shaders-and-shader-resources
-//https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/complete-code-sample-for-using-a-corewindow-with-directx
-//And Chris Cascioli's resources from IGME 540 at RIT
+/*Code from Microsoft documentation: 
+Chapter 4: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/work-with-dxgi
+Chapter 5: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/understand-the-directx-11-2-graphics-pipeline
+Chapter 6: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/work-with-shaders-and-shader-resources
+https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/complete-code-sample-for-using-a-corewindow-with-directx
+And Chris Cascioli's resources from IGME 540 at RIT*/
 
 #pragma once
 //Include to use DirectX11 API
@@ -68,6 +68,7 @@ private:
 	void LoadShaders();
 
 	/*Direct3D objects & resources*/
+	//They are all pointers because they refer to addresses in GPU memory
 	Microsoft::WRL::ComPtr<IDXGISwapChain> swapChain;
 	Microsoft::WRL::ComPtr<ID3D11Device> device;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext;
@@ -96,11 +97,8 @@ private:
 	__int64 prevTime;
 	void UpdateTimer();//called once a frame
 
-	//Path getting stuff
-	std::string GetExePath();
-	std::wstring GetExePath_Wide();
-	std::string GetFullPathTo(std::string relativeFilePath);
-	std::wstring GetFullPathTo_Wide(std::wstring relativeFilePath);
+	//File path getting function
+	std::wstring GetExePath(std::wstring relativeFilePath);
 	
 	bool vsync;
 };
