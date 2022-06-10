@@ -22,9 +22,12 @@ And Chris Cascioli's resources from IGME 540 at RIT*/
 //Include other class headers
 #include "Vertex.h"
 #include "Input.h"
+#include "Mesh.h"
 //For path getting stuff 
 #include <string>
 #include <sstream>
+//To use vectors
+#include <vector>
 
 class DX11App
 {
@@ -78,9 +81,6 @@ private:
 	//Resource for depth stencil
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthBufferTexture;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView;
-	//Buffers to hold mesh data
-	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
 	//Shader related data
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
@@ -101,5 +101,9 @@ private:
 	std::wstring GetExePath(std::wstring relativeFilePath);
 	
 	bool vsync;
+
+	//Create vector of mesh pointers 
+	//Meshes are pointers so that they aren't destroyed when they are out of scope
+	std::vector<Mesh*> myMeshes;
 };
 

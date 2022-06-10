@@ -5,6 +5,7 @@ Chapter 6: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/wor
 https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/complete-code-sample-for-using-a-corewindow-with-directx
 And Chris Cascioli's resources from IGME 540 at RIT*/
 #include "DX11App.h"
+
 DX11App* DX11App::DX11AppInstance = 0;
 using namespace DirectX;//for the DirectX Math library
 
@@ -32,12 +33,17 @@ DX11App::~DX11App()
 {
     //Delete input manager instance
     delete& Input::GetInstance();
+    //Destroy meshes 
+    for(auto e:myMeshes) {
+        delete e;
+        e = NULL;
+    }
 }
 
 HRESULT DX11App::InitWindow()
 {
     //Fill out a window class struct
-    //Microsoft Documentation: https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-wndclassw
+    //Documentation: https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-wndclassw
     WNDCLASS wndClass = {};//zero out
     wndClass.style = CS_HREDRAW | CS_VREDRAW;//redraw at horizontal or vertical adjustment
     wndClass.lpfnWndProc = DX11App::StaticWindowProc;//pointer to the message processing function you created
@@ -270,46 +276,27 @@ void DX11App::OnResize()
 
 void DX11App::CreateBasicGeometry()
 {
-    //Create the vertex buffer description
-    D3D11_BUFFER_DESC vbd = {};  
-    //Set relevant buffer description struct members
-    vbd.Usage = D3D11_USAGE_IMMUTABLE;//can we change buffer after creation?->no     
-    vbd.ByteWidth = sizeof(Vertex) * 3;//size of buffer
-    vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;//tells DirectX buffer type
-    vbd.CPUAccessFlags = 0;
-    vbd.MiscFlags = 0;
-    vbd.StructureByteStride = 0;
-
-    //Create data for vertex buffer
     XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
     XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
     XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+    XMFLOAT4 purple = XMFLOAT4(0.5f, 0.0f, 0.5f, 1.0f);
     Vertex vertices[] =
     {
         { XMFLOAT3(+0.0f, +0.5f, +0.0f), red },
         { XMFLOAT3(+0.5f, -0.5f, +0.0f), blue },
         { XMFLOAT3(-0.5f, -0.5f, +0.0f), green },
+        { XMFLOAT3(+1.0f, +0.5f, +0.0f), purple },
     };
-
-    //D3D11_SUBRESOURCE_DATA struct has 1 important member: pSystem, which holds data
-    D3D11_SUBRESOURCE_DATA initialVertexData = {};
-    initialVertexData.pSysMem = vertices;
-
-    //Create the vertex buffer
-    device->CreateBuffer(&vbd, &initialVertexData, vertexBuffer.GetAddressOf());
-
-    //Then do the same thing for index buffer 
-    D3D11_BUFFER_DESC ibd = {};
-    ibd.Usage = D3D11_USAGE_IMMUTABLE;
-    ibd.ByteWidth = sizeof(unsigned int) * 3;	
-    ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;	
-    ibd.CPUAccessFlags = 0;
-    ibd.MiscFlags = 0;
-    ibd.StructureByteStride = 0;
-    unsigned int indices[] = { 0, 1, 2 };
-    D3D11_SUBRESOURCE_DATA initialIndexData = {};
-    initialIndexData.pSysMem = indices;
-    device->CreateBuffer(&ibd, &initialIndexData, indexBuffer.GetAddressOf());
+    //Make sure indices have all triangles drawn in clockwise winding order
+    unsigned int triIndices[] = { 0, 1, 2 };
+    unsigned int parIndices[] = {//square is two triangles
+        0, 1, 2, 
+        0, 3, 1
+    };
+    Mesh* triangle = new Mesh(vertices, 3, triIndices, 3, device, deviceContext);
+    Mesh* parallelogram = new Mesh(vertices, 6, parIndices, 6, device, deviceContext);
+    myMeshes.push_back(triangle);
+    myMeshes.push_back(parallelogram);
 }
 
 void DX11App::LoadShaders()
@@ -384,25 +371,9 @@ void DX11App::Draw(float deltaTime, float totalTime)
         1.0f,
         0);
 
-    //for (each mesh drawn){
-        /*Bind resources to various parts of the rendering pipline*/
-        //Create variables for stride and offset as their addresses need to be accessed 
-        UINT stride = sizeof(Vertex);
-        UINT offset = 0;
-        deviceContext->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
-        deviceContext->IASetInputLayout(inputLayout.Get());
-        deviceContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-        deviceContext->VSSetShader(vertexShader.Get(), 0, 0);
-        deviceContext->PSSetShader(pixelShader.Get(), 0, 0);
-
-        //Start the rendering pipeline
-        //There are several other "Draw" functions that can do this
-        //But DrawIndexed is the most common- it requires you to have bound a buffer of vertices & their indices to the pipeline
-        deviceContext->DrawIndexed(
-            3,//number of indices to use 
-            0,//this and next param are offset values, both being 0 means you start at first index and then go through each of them in order     
-            0);    
-    //}end hypothetical for loop
+    for(auto e : myMeshes) {
+        e->Draw();
+    }
 
     //Tell API frame is complete and present 
     swapChain->Present(vsync ? 1 : 0, 0);
@@ -434,7 +405,9 @@ HRESULT DX11App::Run()
     CreateBasicGeometry();
     LoadShaders();
     deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+    deviceContext->IASetInputLayout(inputLayout.Get());
+    deviceContext->VSSetShader(vertexShader.Get(), 0, 0);
+    deviceContext->PSSetShader(pixelShader.Get(), 0, 0);
     while (WM_QUIT != msg.message)
     {
         bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
