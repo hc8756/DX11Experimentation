@@ -445,6 +445,7 @@ HRESULT DX11App::Run()
             vsData.colorTint = XMFLOAT4(0.5f, 1.0f, 0.5f, 0.5f);
             vsData.offset = XMFLOAT3(-0.5f, 0.0f, 0.0f);
             //Copy this struct over to the vs constant buffer
+            //map->memcpy->unmap is fast way to do this and better for dynamic buffers
             D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
             deviceContext->Map(constantBufferVS.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
             memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
