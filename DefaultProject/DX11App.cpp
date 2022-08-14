@@ -1,9 +1,3 @@
-/*Code from Microsoft documentation:
-Chapter 4: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/work-with-dxgi
-Chapter 5: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/understand-the-directx-11-2-graphics-pipeline
-Chapter 6: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/work-with-shaders-and-shader-resources
-https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/complete-code-sample-for-using-a-corewindow-with-directx
-And Chris Cascioli's resources from IGME 540 at RIT*/
 #include "DX11App.h"
 
 DX11App* DX11App::DX11AppInstance = 0;
