@@ -1,7 +1,7 @@
 #include "DX11App.h"
 
 DX11App* DX11App::DX11AppInstance = 0;
-using namespace DirectX;//for the DirectX Math library
+using namespace DirectX;
 
 DX11App::DX11App(HINSTANCE hInstance, unsigned int wndWidth, unsigned int wndHeight)
 {
@@ -29,6 +29,10 @@ DX11App::~DX11App()
     delete& Input::GetInstance();
     //Destroy meshes 
     for(auto e:myMeshes) {
+        delete e;
+        e = NULL;
+    }
+    for (auto e : myEntities) {
         delete e;
         e = NULL;
     }
@@ -123,13 +127,13 @@ HRESULT DX11App::InitDirectX()
     //Attempt Direct3D initialization & return failure if something goes wrong
     HRESULT hr = S_OK;
     hr = D3D11CreateDeviceAndSwapChain(
-        0,//default values...
+        0,
         D3D_DRIVER_TYPE_HARDWARE,	
         0,							
         deviceFlags,				
         0,							
         0,							
-        D3D11_SDK_VERSION,//...up to here
+        D3D11_SDK_VERSION,
         &scDesc,//address of swap chain description
         swapChain.GetAddressOf(),//address of swap chain variable
         device.GetAddressOf(),//address of device variable
@@ -137,24 +141,21 @@ HRESULT DX11App::InitDirectX()
         deviceContext.GetAddressOf());//address of device context variable
     if (FAILED(hr)) return hr;
 
-    //Above function created Direct3D objects & resources 
-    //For example, it creates buffers that can be used as drawing surfaces
-    //This function places one of those buffers into our backBufferTexture variable
+    //Above function created Direct3D objects & resources, including back buffers
+    //This accesses one of the back buffers and places it in our backbuffer (texture) variable 
     swapChain->GetBuffer(
         0,
-        //uuid of backBufferTexture data type 
         __uuidof(ID3D11Texture2D),
         (void**)&backBufferTexture);
     
-    //We will now need to read our backBufferTexture into the swap chain to be drawn onto
-    //To do this, we will need to create a render-target view and place it in our backBufferRTV variable
-    //In Direct3D, a view is a way to access a specific resource
+    //In Direct3D, a view is a way to access a buffer
+    //Here we create a view for our back buffer
     if (backBufferTexture != 0)
     {
         device->CreateRenderTargetView(
             backBufferTexture.Get(),
             0,
-            backBufferRTV.GetAddressOf());
+            backBufferView.GetAddressOf());
         backBufferTexture->Release();
     }
 
@@ -185,10 +186,10 @@ HRESULT DX11App::InitDirectX()
         depthBufferTexture->Release();
     }
 
-    //Bind thse views to the pipeline
+    //Bind these views to the pipeline
     deviceContext->OMSetRenderTargets(
         1,
-        backBufferRTV.GetAddressOf(),
+        backBufferView.GetAddressOf(),
         depthStencilView.Get());
 
     //Set up a viewport
@@ -205,92 +206,28 @@ HRESULT DX11App::InitDirectX()
     return S_OK; 
 }
 
-void DX11App::OnResize()
-{
-    //Get rid of the views we created in previous function
-    backBufferRTV.Reset();
-    depthStencilView.Reset();
-
-    //Resize swap chain buffers & repeat the process of creating views + binding them to pipeline
-    swapChain->ResizeBuffers(
-        2,
-        wndWidth,
-        wndHeight,
-        DXGI_FORMAT_R8G8B8A8_UNORM,
-        0);
-
-    swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBufferTexture.GetAddressOf()));
-    if (backBufferTexture != 0)
-    {
-        device->CreateRenderTargetView(
-            backBufferTexture.Get(),
-            0,
-            backBufferRTV.ReleaseAndGetAddressOf());//ReleaseAndGetAddressOf() cleans up the old object before giving us the pointer
-        backBufferTexture->Release();
-    }
-
-    D3D11_TEXTURE2D_DESC depthStencilDesc;
-    depthStencilDesc.Width = wndWidth;
-    depthStencilDesc.Height = wndHeight;
-    depthStencilDesc.MipLevels = 1;
-    depthStencilDesc.ArraySize = 1;
-    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
-    depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-    depthStencilDesc.CPUAccessFlags = 0;
-    depthStencilDesc.MiscFlags = 0;
-    depthStencilDesc.SampleDesc.Count = 1;
-    depthStencilDesc.SampleDesc.Quality = 0;
-
-    device->CreateTexture2D(&depthStencilDesc, 0, &depthBufferTexture);
-    if (depthBufferTexture != 0)
-    {
-        device->CreateDepthStencilView(
-            depthBufferTexture.Get(),
-            0,
-            depthStencilView.ReleaseAndGetAddressOf()); 
-        depthBufferTexture->Release();
-    }
-
-    deviceContext->OMSetRenderTargets(
-        1,
-        backBufferRTV.GetAddressOf(), 
-        depthStencilView.Get());
-
-    //Re-set viewport w/ new dimensions
-    D3D11_VIEWPORT viewport = {};
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.Width = (float)wndWidth;
-    viewport.Height = (float)wndHeight;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-    deviceContext->RSSetViewports(1, &viewport);
-}
-
 void DX11App::CreateBasicGeometry()
 {
     XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
     XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
     XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
-    XMFLOAT4 purple = XMFLOAT4(0.5f, 0.0f, 0.5f, 1.0f);
     Vertex vertices[] =
     {
         { XMFLOAT3(+0.0f, +0.5f, +0.0f), red },
         { XMFLOAT3(+0.5f, -0.5f, +0.0f), blue },
         { XMFLOAT3(-0.5f, -0.5f, +0.0f), green },
-        { XMFLOAT3(+1.0f, +0.5f, +0.0f), purple },
     };
     //Make sure indices have all triangles drawn in clockwise winding order
     unsigned int triIndices[] = { 0, 1, 2 };
-    unsigned int parIndices[] = {//square is two triangles
-        0, 1, 2, 
-        0, 3, 1
-    };
-    Mesh* triangle = new Mesh(vertices, 3, triIndices, 3, device, deviceContext);
-    Mesh* parallelogram = new Mesh(vertices, 6, parIndices, 6, device, deviceContext);
+    Mesh* triangle = new Mesh(vertices, 3, triIndices, 3, device);
     myMeshes.push_back(triangle);
-    myMeshes.push_back(parallelogram);
+
+    Entity* triangleEntity1 = new Entity(triangle);
+    Entity* triangleEntity2 = new Entity(triangle);
+    triangleEntity2->GetTransform()->Translate(1,0,0);
+    myEntities.push_back(triangleEntity1);
+    myEntities.push_back(triangleEntity2);
+    
 }
 
 void DX11App::LoadShaders()
@@ -346,24 +283,25 @@ void DX11App::LoadShaders()
         0,
         pixelShader.GetAddressOf());
 
-    /*A3: create constant buffer description and create constant buffer for vertex shader*/
-    //First, calculate the smallest byte size that is bigger than buffer struct & a multiple of 16
+    /*Create constant buffer description and create constant buffer for vertex shader*/
+    //Calculate the smallest byte size that is bigger than buffer struct & a multiple of 16
     unsigned int size = sizeof(VertexShaderExternalData);
     size = (size + 15) / 16 * 16;
-    //Create constant buffer
+    //Create constant buffer description
     D3D11_BUFFER_DESC cbd = {};
     cbd.Usage = D3D11_USAGE_DYNAMIC;//this buffer may be edited and read often
     cbd.ByteWidth = size;//size we calculated earlier
     cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;//this is a constant buffer
     cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;//this will be written, not read in CPU (C++ side)
     D3D11_SUBRESOURCE_DATA initialIndexData = {};
-    //Create buffer
+    //Create constant buffer
     device->CreateBuffer(&cbd, 0, constantBufferVS.GetAddressOf());
 }
 
 //For game logic & user input later
 void DX11App::Update(float deltaTime, float totalTime)
 {
+    myEntities[1]->GetTransform()->Rotate(0, 0, deltaTime);
 }
 
 //Clear the screen, redraw everything, present to the user
@@ -372,28 +310,24 @@ void DX11App::Draw(float deltaTime, float totalTime)
     const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };//background color for clearing
 
     //Clear the render target and depth buffer once per frame before drawing anything
-    deviceContext->ClearRenderTargetView(backBufferRTV.Get(), color);
+    deviceContext->ClearRenderTargetView(backBufferView.Get(), color);
     deviceContext->ClearDepthStencilView(
         depthStencilView.Get(),
         D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
         1.0f,
         0);
 
-    for(auto e : myMeshes) {
-        e->Draw();
+    for(auto e : myEntities) {
+        e->Draw(constantBufferVS,deviceContext);
     }
 
     //Tell API frame is complete and present 
     swapChain->Present(vsync ? 1 : 0, 0);
     //Re-bind render target after every call to Present()
-    deviceContext->OMSetRenderTargets(1, backBufferRTV.GetAddressOf(), depthStencilView.Get());
+    deviceContext->OMSetRenderTargets(1, backBufferView.GetAddressOf(), depthStencilView.Get());
 }
 
 //Game & message loop function
-/*From documentation: 
- "...each iteration should choose to process new Windows messages if 
- they are available, and if no messages are in the queue it should 
- render a new frame.*/
 HRESULT DX11App::Run()
 {
     //Set timer variables
@@ -416,9 +350,10 @@ HRESULT DX11App::Run()
     deviceContext->IASetInputLayout(inputLayout.Get());
     deviceContext->VSSetShader(vertexShader.Get(), 0, 0);
     deviceContext->PSSetShader(pixelShader.Get(), 0, 0);
-
-    
-
+    /*From documentation:
+     "...each iteration should choose to process new Windows messages if
+     they are available, and if no messages are in the queue it should
+     render a new frame.*/
     while (WM_QUIT != msg.message)
     {
         bGotMsg = (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE) != 0);
@@ -432,24 +367,6 @@ HRESULT DX11App::Run()
             UpdateTimer();
             Input::GetInstance().Update();
             Update(deltaTime, totalTime);
-
-            /*A3 related code*/
-            //Create data in form of correct struct for vs constant buffer
-            VertexShaderExternalData vsData;
-            vsData.colorTint = XMFLOAT4(0.5f, 1.0f, 0.5f, 0.5f);
-            vsData.offset = XMFLOAT3(-0.5f, 0.0f, 0.0f);
-            //Copy this struct over to the vs constant buffer
-            //map->memcpy->unmap is fast way to do this and better for dynamic buffers
-            D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-            deviceContext->Map(constantBufferVS.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-            memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-            deviceContext->Unmap(constantBufferVS.Get(), 0);
-            //Bind our constant buffer to slot b0
-            deviceContext->VSSetConstantBuffers(
-                0, // slot b0
-                1, // only one constant buffer
-                constantBufferVS.GetAddressOf());
-
             Draw(deltaTime, totalTime);
             Input::GetInstance().EndOfFrame();
         }

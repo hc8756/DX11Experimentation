@@ -16,6 +16,7 @@
 #include "Vertex.h"
 #include "Input.h"
 #include "Mesh.h"
+#include "Entity.h"
 #include "BufferStruct.h"
 //For path getting stuff 
 #include <string>
@@ -33,11 +34,10 @@ public:
 		unsigned int wndHeight
 	);
 	~DX11App();
-	//Main functions: ones that return HRESULT will be called in Main.cpp
+	//Main function
 	HRESULT InitWindow();
 	HRESULT InitDirectX();
 	HRESULT Run();
-	void OnResize();
 
 	//Static stuff required for OS - level message processing
 	static LRESULT CALLBACK StaticWindowProc(//message processing function
@@ -50,8 +50,8 @@ public:
 
 private:
 
-	//Parameters passed in constructor
-	HINSTANCE hInstance;//handle to Windows application
+	//Parameters passed in constructor when called in Main.cpp
+	HINSTANCE hInstance;
 	unsigned int wndWidth;
 	unsigned int wndHeight;
 
@@ -71,7 +71,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> deviceContext;
 	//Resources for swap chain
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backBufferTexture;
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> backBufferRTV;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> backBufferView;
 	//Resource for depth stencil
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthBufferTexture;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView;
@@ -83,8 +83,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBufferVS;
 	//Direct3D device metadata
 	D3D_FEATURE_LEVEL dxFeatureLevel;
-
-	
 	
 	//Variables related to timer
 	double secsInCount;
@@ -100,8 +98,9 @@ private:
 	
 	bool vsync;
 
-	//Create vector of mesh pointers 
-	//Meshes are pointers so that they aren't destroyed when they are out of scope
+	//Create vector of mesh & entity pointers 
+	//These are pointers so that they aren't destroyed when they are out of scope
 	std::vector<Mesh*> myMeshes;
+	std::vector<Entity*> myEntities;
 };
 
