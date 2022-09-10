@@ -3,7 +3,6 @@
 //Constructor takes array of vertices and indices and uses the passed device to create buffers
 Mesh::Mesh(Vertex* vertexArray, int vertNum, unsigned int* indexArray, int indNum, Microsoft::WRL::ComPtr<ID3D11Device> pDevice) {
     //Fill in private variables
-    
     ibSize = indNum;
     //Create the vertex buffer description
     D3D11_BUFFER_DESC vbd = {};
@@ -35,9 +34,7 @@ Mesh::Mesh(Vertex* vertexArray, int vertNum, unsigned int* indexArray, int indNu
     pDevice->CreateBuffer(&ibd, &initialIndexData, indexBuffer.GetAddressOf());
 }
 
-Mesh::~Mesh() {
-    //Nothing here yet as all pointers are smart pointers
-}
+Mesh::~Mesh() {}
 
 Microsoft::WRL::ComPtr<ID3D11Buffer> Mesh::GetVertexBuffer() {
     return vertexBuffer;

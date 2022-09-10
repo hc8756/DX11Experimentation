@@ -1,9 +1,10 @@
 #include "Entity.h"
 
 
-Entity::Entity(Mesh* m)
+Entity::Entity(Mesh* m1, Material* m2)
 {
-    entityMesh = m;
+    entityMesh = m1;
+    entityMaterial = m2;
 }
 
 Entity::~Entity()
@@ -17,7 +18,7 @@ void Entity::Draw(Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBufferVS, Micros
 {
     //Create buffer to hold data to pass to constant buffer
     VertexShaderExternalData vsData = {};
-    vsData.colorTint = DirectX::XMFLOAT4(0.5f, 1.0f, 0.5f, 0.5f);
+    vsData.colorTint = entityMaterial->GetMatTint();
     vsData.worldMatrix = entityTransform.GetWorldMatrix();
     //Copy this struct over to the vs constant buffer
     //map->memcpy->unmap is fast way to do this and better for dynamic buffers
@@ -48,4 +49,9 @@ Mesh* Entity::GetMesh()
 Transform* Entity::GetTransform()
 {
 	return &entityTransform;
+}
+
+Material* Entity::GetMaterial()
+{
+    return entityMaterial;
 }

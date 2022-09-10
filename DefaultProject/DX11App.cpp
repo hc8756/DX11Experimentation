@@ -25,14 +25,16 @@ DX11App::DX11App(HINSTANCE hInstance, unsigned int wndWidth, unsigned int wndHei
 
 DX11App::~DX11App()
 {
-    //Delete input manager instance
-    delete& Input::GetInstance();
     //Destroy meshes 
     for(auto e:myMeshes) {
         delete e;
         e = NULL;
     }
     for (auto e : myEntities) {
+        delete e;
+        e = NULL;
+    }
+    for (auto e : myMaterials) {
         delete e;
         e = NULL;
     }
@@ -102,8 +104,6 @@ HRESULT DX11App::InitWindow()
     //Show window we created
     ShowWindow(hWnd, SW_SHOW);
 
-    //Initialize the input manager
-    Input::GetInstance().Initialize(hWnd);
     return S_OK;
 }
 
@@ -221,9 +221,11 @@ void DX11App::CreateBasicGeometry()
     unsigned int triIndices[] = { 0, 1, 2 };
     Mesh* triangle = new Mesh(vertices, 3, triIndices, 3, device);
     myMeshes.push_back(triangle);
+    Material* redMat = new Material(pixelShader,vertexShader,red);
+    myMaterials.push_back(redMat);
 
-    Entity* triangleEntity1 = new Entity(triangle);
-    Entity* triangleEntity2 = new Entity(triangle);
+    Entity* triangleEntity1 = new Entity(triangle,redMat);
+    Entity* triangleEntity2 = new Entity(triangle,redMat);
     triangleEntity2->GetTransform()->Translate(1,0,0);
     myEntities.push_back(triangleEntity1);
     myEntities.push_back(triangleEntity2);
@@ -365,10 +367,8 @@ HRESULT DX11App::Run()
         else
         {
             UpdateTimer();
-            Input::GetInstance().Update();
             Update(deltaTime, totalTime);
             Draw(deltaTime, totalTime);
-            Input::GetInstance().EndOfFrame();
         }
     }
     return (HRESULT)msg.wParam;

@@ -1,6 +1,6 @@
 #include "Transform.h"
 using namespace DirectX;
-//set 
+
 Transform::Transform()
 {
 	XMStoreFloat4x4(&worldMatrix, XMMatrixIdentity());

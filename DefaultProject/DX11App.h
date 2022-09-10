@@ -14,9 +14,9 @@
 #pragma comment(lib, "d3dcompiler.lib")
 //Include other class headers
 #include "Vertex.h"
-#include "Input.h"
 #include "Mesh.h"
 #include "Entity.h"
+#include "Material.h"
 #include "BufferStruct.h"
 //For path getting stuff 
 #include <string>
@@ -102,5 +102,6 @@ private:
 	//These are pointers so that they aren't destroyed when they are out of scope
 	std::vector<Mesh*> myMeshes;
 	std::vector<Entity*> myEntities;
+	std::vector<Material*> myMaterials;
 };
 
