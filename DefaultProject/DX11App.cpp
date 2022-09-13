@@ -7,11 +7,10 @@ DX11App::DX11App(HINSTANCE hInstance, unsigned int wndWidth, unsigned int wndHei
 {
     //Set reference to self
     DX11AppInstance = this;
-    //Initialize variables
+    //Initialize variables w/ parameters
     this->hInstance = hInstance;
     this->wndWidth = wndWidth;
     this->wndHeight = wndHeight;
-    vsync = false;
     //Initialize timer variables 
     totalTime = 0;
     deltaTime = 0;
@@ -21,11 +20,12 @@ DX11App::DX11App(HINSTANCE hInstance, unsigned int wndWidth, unsigned int wndHei
     _int64 freq;//create variable to hold timer frequency
     QueryPerformanceFrequency((LARGE_INTEGER*)&freq);//this function takes pointer to large int and fills with counts/sec
     secsInCount = 1.0 / (double)freq;//inverse is secs/count
+    //Create a camera
+    mainCam = new Camera(XMFLOAT3(0.0f, 2.0f, -15.0f),float(wndWidth/wndHeight), XM_PIDIV4, 0.01f, 100.0f);
 }
 
 DX11App::~DX11App()
 {
-    //Destroy meshes 
     for(auto e:myMeshes) {
         delete e;
         e = NULL;
@@ -38,6 +38,12 @@ DX11App::~DX11App()
         delete e;
         e = NULL;
     }
+    delete pixelShader;
+    pixelShader = nullptr;
+    delete vertexShader;
+    vertexShader = nullptr;
+    delete mainCam;
+    mainCam = nullptr;
 }
 
 HRESULT DX11App::InitWindow()
@@ -103,11 +109,10 @@ HRESULT DX11App::InitWindow()
 
     //Show window we created
     ShowWindow(hWnd, SW_SHOW);
-
     return S_OK;
 }
 
-//Set up swap chain and swap chain buffers (back buffer and depth buffer) & define viewport
+//Create DirectX resources
 HRESULT DX11App::InitDirectX()
 {
     //Added for compatibility with Direct2D
@@ -209,101 +214,25 @@ HRESULT DX11App::InitDirectX()
 void DX11App::CreateBasicGeometry()
 {
     XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-    XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-    XMFLOAT4 blue = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
-    Vertex vertices[] =
-    {
-        { XMFLOAT3(+0.0f, +0.5f, +0.0f), red },
-        { XMFLOAT3(+0.5f, -0.5f, +0.0f), blue },
-        { XMFLOAT3(-0.5f, -0.5f, +0.0f), green },
-    };
-    //Make sure indices have all triangles drawn in clockwise winding order
-    unsigned int triIndices[] = { 0, 1, 2 };
-    Mesh* triangle = new Mesh(vertices, 3, triIndices, 3, device);
-    myMeshes.push_back(triangle);
+    Mesh* cubeMesh = new Mesh(GetPath(L"../Assets/Models/sphere.obj").c_str(), device);
+    myMeshes.push_back(cubeMesh);
     Material* redMat = new Material(pixelShader,vertexShader,red);
     myMaterials.push_back(redMat);
-
-    Entity* triangleEntity1 = new Entity(triangle,redMat);
-    Entity* triangleEntity2 = new Entity(triangle,redMat);
-    triangleEntity2->GetTransform()->Translate(1,0,0);
-    myEntities.push_back(triangleEntity1);
-    myEntities.push_back(triangleEntity2);
-    
+    Entity* cubeEntity = new Entity(cubeMesh,redMat,mainCam);
+    myEntities.push_back(cubeEntity);
 }
 
 void DX11App::LoadShaders()
 {
-    //Blob that will hold codes of shaders in order (vertex->pixel)
-    //Blob is buffer for raw data
-    ID3DBlob* shaderBlob;
-
-    //Read vertex shader code into blob
-    D3DReadFileToBlob(
-        GetExePath(L"VertexShader.cso").c_str(),
-        &shaderBlob);
-
-    //Create a vertex shader from information in blob
-    device->CreateVertexShader(
-        shaderBlob->GetBufferPointer(),//pointer to the blob's contents
-        shaderBlob->GetBufferSize(),//size of blob's contents
-        0,	
-        vertexShader.GetAddressOf());//address of our vertex shader pointer
-
-    /*Create an input layout that informs vertex shader how to read vertex buffer*/
-    //You need one input layout per vertex type (not per vertex buffer)
-    //In order to create an input layout you must have a loaded vertex shader + array of D3D11_INPUT_ELEMENT_DESC
-    //An D3D11_INPUT_ELEMENT_DESC describes the syntax of a single component of vertex in buffer (should match Vertex.h)
-    D3D11_INPUT_ELEMENT_DESC inputElements[2] = {};
-
-    //Component 1: 3 x 32 bit float position
-    inputElements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;//data type documentation: https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format			
-    inputElements[0].SemanticName = "POSITION";//must match vertex shader input
-    inputElements[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-
-    //Component 2: 4 x 32 bit float color (R,G,B,A)
-    inputElements[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;			
-    inputElements[1].SemanticName = "COLOR";//must match vertex shader input
-    inputElements[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;//this just makes sure each component is read in order w/o offset
-
-    //Create the input layout which will later be bound to the input assembler
-    device->CreateInputLayout(
-        inputElements,//your array of input elements
-        2,//size of that array
-        shaderBlob->GetBufferPointer(),//pointer to the code of a shader that uses this layout
-        shaderBlob->GetBufferSize(),//size of the shader code 
-        inputLayout.GetAddressOf());//address of our input layout pointer
-
-    //Reuse same blob to hold pixel shader code
-    D3DReadFileToBlob(
-        GetExePath(L"PixelShader.cso").c_str(),
-        &shaderBlob);
-
-    device->CreatePixelShader(
-        shaderBlob->GetBufferPointer(),
-        shaderBlob->GetBufferSize(),
-        0,
-        pixelShader.GetAddressOf());
-
-    /*Create constant buffer description and create constant buffer for vertex shader*/
-    //Calculate the smallest byte size that is bigger than buffer struct & a multiple of 16
-    unsigned int size = sizeof(VertexShaderExternalData);
-    size = (size + 15) / 16 * 16;
-    //Create constant buffer description
-    D3D11_BUFFER_DESC cbd = {};
-    cbd.Usage = D3D11_USAGE_DYNAMIC;//this buffer may be edited and read often
-    cbd.ByteWidth = size;//size we calculated earlier
-    cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;//this is a constant buffer
-    cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;//this will be written, not read in CPU (C++ side)
-    D3D11_SUBRESOURCE_DATA initialIndexData = {};
-    //Create constant buffer
-    device->CreateBuffer(&cbd, 0, constantBufferVS.GetAddressOf());
+    vertexShader = new SimpleVertexShader(device, deviceContext, GetPath(L"VertexShader.cso").c_str());
+    pixelShader = new SimplePixelShader(device, deviceContext, GetPath(L"PixelShader.cso").c_str());
+    
 }
 
 //For game logic & user input later
 void DX11App::Update(float deltaTime, float totalTime)
 {
-    myEntities[1]->GetTransform()->Rotate(0, 0, deltaTime);
+    myEntities[0]->GetTransform()->Rotate(0, 0, deltaTime);
 }
 
 //Clear the screen, redraw everything, present to the user
@@ -320,7 +249,7 @@ void DX11App::Draw(float deltaTime, float totalTime)
         0);
 
     for(auto e : myEntities) {
-        e->Draw(constantBufferVS,deviceContext);
+        e->Draw(deviceContext);
     }
 
     //Tell API frame is complete and present 
@@ -344,14 +273,8 @@ HRESULT DX11App::Run()
     MSG  msg;
     msg.message = WM_NULL;
     PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
-
-    //Create resources + set settings for the pipeline
-    CreateBasicGeometry();
-    LoadShaders();
+    LoadShaders(); CreateBasicGeometry();
     deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    deviceContext->IASetInputLayout(inputLayout.Get());
-    deviceContext->VSSetShader(vertexShader.Get(), 0, 0);
-    deviceContext->PSSetShader(pixelShader.Get(), 0, 0);
     /*From documentation:
      "...each iteration should choose to process new Windows messages if
      they are available, and if no messages are in the queue it should
@@ -407,17 +330,15 @@ LRESULT DX11App::StaticWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-//Function used to get file paths of shaders so that blob can access them in LoadShaders()
-//Returns a wide character string as most of the Windows API requires it
-std::wstring DX11App::GetExePath(std::wstring relativeFilePath)
+//Function used to get full path given file path relative to project exe 
+std::wstring DX11App::GetPath(std::wstring relativeFilePath)
 {
     std::string path = "";
-    //Get path of this file
-    //It should look something like this: C:\Users\username\Desktop\MyDX11Starter\MyDX11Starter
+    //Get path of project exe
     char currentDir[1024] = {};
     GetModuleFileNameA(0, currentDir, 1024);
 
-    //Find the location of the last slash character as we are assuming that shaders are in same directory as this file
+    //Find the location of the last slash character 
     char* lastSlash = strrchr(currentDir, '\\');
     if (lastSlash)
     {
@@ -430,15 +351,9 @@ std::wstring DX11App::GetExePath(std::wstring relativeFilePath)
     wchar_t widePath[1024] = {};
     mbstowcs_s(0, widePath, path.c_str(), 1024);
 
-    //Return path after adding name of specific file  
+    //Return path after adding \parameter  
     return std::wstring(widePath) + L"\\" + relativeFilePath;
 }
-
-
-
-
-
-
 
 
 

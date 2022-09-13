@@ -1,9 +1,11 @@
 #pragma once
 #include <DirectXMath.h>
 
-//Definition of vertex data as it will be created in CPU-side for initial data
+//Definition of vertex data compatible with obj file format
 struct Vertex
 {
 	DirectX::XMFLOAT3 Position;	    
-	DirectX::XMFLOAT4 Color;        
+	DirectX::XMFLOAT2 UV;
+	DirectX::XMFLOAT3 Normal; 
+	
 };

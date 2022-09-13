@@ -1,20 +1,20 @@
 #include "Material.h"
 
-Material::Material(Microsoft::WRL::ComPtr<ID3D11PixelShader> ps, Microsoft::WRL::ComPtr<ID3D11VertexShader> vs, DirectX::XMFLOAT4 tint)
+Material::Material(SimplePixelShader* ps, SimpleVertexShader* vs, DirectX::XMFLOAT4 tint)
 { 
 	matPS = ps;
 	matVS = vs;
 	matTint = tint;
 }
 
-Microsoft::WRL::ComPtr<ID3D11PixelShader> Material::GetMatPS()
+SimplePixelShader* Material::GetMatPS()
 {
-	return Microsoft::WRL::ComPtr<ID3D11PixelShader>();
+	return matPS; 
 }
 
-Microsoft::WRL::ComPtr<ID3D11VertexShader> Material::GetMatVS()
+SimpleVertexShader* Material::GetMatVS()
 {
-	return Microsoft::WRL::ComPtr<ID3D11VertexShader>();
+	return matVS;
 }
 
 DirectX::XMFLOAT4 Material::GetMatTint()
@@ -22,12 +22,12 @@ DirectX::XMFLOAT4 Material::GetMatTint()
 	return matTint;
 }
 
-void Material::SetMatPS(Microsoft::WRL::ComPtr<ID3D11PixelShader> ps)
+void Material::SetMatPS(SimplePixelShader* ps)
 {
 	matPS = ps;
 }
 
-void Material::SetMatVS(Microsoft::WRL::ComPtr<ID3D11VertexShader> vs)
+void Material::SetMatVS(SimpleVertexShader* vs)
 {
 	matVS = vs;
 }

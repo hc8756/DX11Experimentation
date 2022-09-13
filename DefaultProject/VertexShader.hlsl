@@ -1,21 +1,18 @@
 
 cbuffer ExternalData : register(b0)
 {
-	float4 colorTint;
-	matrix worldMatrix;
+	matrix world;
+	matrix view;
+	matrix projection;
 }
 // Struct representing a single vertex worth of data
 // This should match the vertex definition in our C++ code (look at LoadShaders() code)
 
 struct VertexShaderInput
 {
-	// Data type
-	//  |
-	//  |   Name          Semantic
-	//  |    |                |
-	//  v    v                v
-	float3 localPosition	: POSITION;     // XYZ position
-	float4 color			: COLOR;        // RGBA color
+	float3 localPosition	: POSITION;
+	float2 uv				: TEXCOORD;
+	float3 normal			: NORMAL;
 };
 
 // Struct representing the data we're sending down the pipeline
@@ -25,13 +22,9 @@ struct VertexShaderInput
 // - Each variable must have a semantic, which defines its usage
 struct VertexToPixel
 {
-	// Data type
-	//  |
-	//  |   Name          Semantic
-	//  |    |                |
-	//  v    v                v
-	float4 screenPosition	: SV_POSITION;	// XYZW position (System Value Position)
-	float4 color			: COLOR;        // RGBA color
+	float4 screenPosition	: SV_POSITION;
+	float2 uv				: TEXCOORD;
+	float3 normal			: NORMAL;
 };
 
 // --------------------------------------------------------
@@ -46,14 +39,13 @@ VertexToPixel main(VertexShaderInput input)
 	// Set up output struct
 	VertexToPixel output;
 
-	output.screenPosition = mul(worldMatrix, float4(input.localPosition, 1.0f));
+	// Calculate screen position of this vertex
+	matrix wvp = mul(projection, mul(view, world));
+	output.screenPosition = mul(wvp, float4(input.localPosition, 1.0f));
 
-	// Pass the color through 
-	// - The values will be interpolated per-pixel by the rasterizer
-	// - We don't need to alter it here, but we do need to send it to the pixel shader
-	output.color = input.color * colorTint;
+	// Pass other data through (for now)
+	output.uv = input.uv;
+	output.normal = input.normal; // This will need to be transformed for proper lighting
 
-	// Whatever we return will make its way through the pipeline to the
-	// next programmable stage we're using (the pixel shader for now)
 	return output;
 }

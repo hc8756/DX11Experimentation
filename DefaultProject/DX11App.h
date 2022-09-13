@@ -17,7 +17,9 @@
 #include "Mesh.h"
 #include "Entity.h"
 #include "Material.h"
+#include "Camera.h"
 #include "BufferStruct.h"
+#include "SimpleShader.h"
 //For path getting stuff 
 #include <string>
 #include <sstream>
@@ -56,7 +58,7 @@ private:
 	unsigned int wndHeight;
 
 	//Handle to window
-	HWND hWnd;
+	HWND hWnd=0;
 
 	//Functions called by main functions
 	void Update(float deltaTime, float totalTime);
@@ -76,13 +78,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthBufferTexture;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView;
 	//Shader related data
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
-	//Resource that will hold external data for vertex shader
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBufferVS;
+	SimplePixelShader* pixelShader;
+	SimpleVertexShader* vertexShader;
 	//Direct3D device metadata
-	D3D_FEATURE_LEVEL dxFeatureLevel;
+	D3D_FEATURE_LEVEL dxFeatureLevel= D3D_FEATURE_LEVEL_11_0;
 	
 	//Variables related to timer
 	double secsInCount;
@@ -93,15 +92,17 @@ private:
 	__int64 prevTime;
 	void UpdateTimer();//called once a frame
 
-	//File path getting function
-	std::wstring GetExePath(std::wstring relativeFilePath);
-	
-	bool vsync;
-
+	//Create camera
+	Camera* mainCam;
 	//Create vector of mesh & entity pointers 
-	//These are pointers so that they aren't destroyed when they are out of scope
 	std::vector<Mesh*> myMeshes;
 	std::vector<Entity*> myEntities;
 	std::vector<Material*> myMaterials;
+	//These are pointers so that they aren't destroyed when they are out of scope
+	
+	//Misc:
+	bool vsync=false;
+	//File path getting function
+	std::wstring GetPath(std::wstring relativeFilePath);
 };
 

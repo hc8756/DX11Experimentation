@@ -1,10 +1,11 @@
 #include "Entity.h"
-
-
-Entity::Entity(Mesh* m1, Material* m2)
+using namespace DirectX;
+Entity::Entity(Mesh* m1, Material* m2, Camera* cam)
 {
     entityMesh = m1;
     entityMaterial = m2;
+    cameraUsed = cam;
+
 }
 
 Entity::~Entity()
@@ -14,24 +15,20 @@ Entity::~Entity()
 //Passes world matrix from transform to provided constant buffer
 //Binds index and vertex buffers from mesh to the provided device context
 //Informs device to draw entity
-void Entity::Draw(Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBufferVS, Microsoft::WRL::ComPtr<ID3D11DeviceContext> pDeviceContext)
+void Entity::Draw(Microsoft::WRL::ComPtr<ID3D11DeviceContext> pDeviceContext)
 {
-    //Create buffer to hold data to pass to constant buffer
-    VertexShaderExternalData vsData = {};
-    vsData.colorTint = entityMaterial->GetMatTint();
-    vsData.worldMatrix = entityTransform.GetWorldMatrix();
-    //Copy this struct over to the vs constant buffer
-    //map->memcpy->unmap is fast way to do this and better for dynamic buffers
-    D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-    pDeviceContext->Map(pConstantBufferVS.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-    memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-    pDeviceContext->Unmap(pConstantBufferVS.Get(), 0);
-    //Bind our constant buffer to slot b0
-    pDeviceContext->VSSetConstantBuffers(
-        0, // slot b0
-        1, // only one constant buffer
-        pConstantBufferVS.GetAddressOf());
 
+    // Turn on these shaders
+    entityMaterial->GetMatPS()->SetShader();
+    entityMaterial->GetMatVS()->SetShader();
+
+    // Send data to the vertex shader
+    entityMaterial->GetMatVS()->SetMatrix4x4("world", entityTransform.GetWorldMatrix());
+    entityMaterial->GetMatVS()->SetMatrix4x4("view", cameraUsed->GetView());
+    entityMaterial->GetMatVS()->SetMatrix4x4("projection", cameraUsed->GetProjection());
+    entityMaterial->GetMatVS()->CopyAllBufferData();
+    entityMaterial->GetMatPS()->SetFloat4("colorTint", entityMaterial->GetMatTint());
+    entityMaterial->GetMatPS()->CopyAllBufferData();
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	pDeviceContext->IASetVertexBuffers(0, 1, entityMesh->GetVertexBuffer().GetAddressOf(), &stride, &offset);

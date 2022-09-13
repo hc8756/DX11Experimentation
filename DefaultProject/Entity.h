@@ -4,12 +4,14 @@
 #include "Transform.h"
 #include "Material.h"
 #include "BufferStruct.h"
+#include "SimpleShader.h"
+#include "Camera.h"
 class Entity
 {
 public:
-	Entity(Mesh* m1, Material* m2);
+	Entity(Mesh* m1, Material* m2, Camera* cam);
 	~Entity();
-	void Draw(Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBufferVS, Microsoft::WRL::ComPtr<ID3D11DeviceContext> pDeviceContext);
+	void Draw(Microsoft::WRL::ComPtr<ID3D11DeviceContext> pDeviceContext);
 	Mesh* GetMesh();
 	Transform* GetTransform();
 	Material* GetMaterial();
@@ -17,5 +19,6 @@ private:
 	Mesh* entityMesh;
 	Transform entityTransform;
 	Material* entityMaterial;
+	Camera* cameraUsed;
 };
 
