@@ -9,12 +9,9 @@ Mesh::Mesh(std::wstring objFilePath, Microsoft::WRL::ComPtr<ID3D11Device> pDevic
 	std::ifstream obj(objFilePath);
 
 	// Check for successful open
-	if (!obj.is_open()) {
-		OutputDebugStringW(L"Object not found");return;
-	}
-		
+	if (!obj.is_open()) 
+		return;
 	
-
 	// Read in obj file
 	/*Obj file format:
 	Documentation: https://www.cs.cmu.edu/~mbz/personal/graphics/obj.html

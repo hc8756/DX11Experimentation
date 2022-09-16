@@ -3,7 +3,6 @@
 #include "Mesh.h"
 #include "Transform.h"
 #include "Material.h"
-#include "BufferStruct.h"
 #include "SimpleShader.h"
 #include "Camera.h"
 class Entity
@@ -16,9 +15,9 @@ public:
 	Transform* GetTransform();
 	Material* GetMaterial();
 private:
+	Camera* cameraUsed;
 	Mesh* entityMesh;
 	Transform entityTransform;
 	Material* entityMaterial;
-	Camera* cameraUsed;
 };
 

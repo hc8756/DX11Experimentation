@@ -1,20 +1,9 @@
 #include "SimpleShader.h"
 
-// To enable error reporting, use either or both 
-// of the following lines somewhere in your program, 
-// preferably before loading/using any shaders.
-// 
-// ISimpleShader::ReportErrors = true;
-// ISimpleShader::ReportWarnings = true;
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // ------ BASE SIMPLE SHADER --------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////////
 
-// --------------------------------------------------------
-// Constructor accepts Direct3D device & context
-// --------------------------------------------------------
 ISimpleShader::ISimpleShader(Microsoft::WRL::ComPtr<ID3D11Device> device, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 {
 	// Save the device
@@ -27,18 +16,8 @@ ISimpleShader::ISimpleShader(Microsoft::WRL::ComPtr<ID3D11Device> device, Micros
 	this->shaderValid = false;
 }
 
-// --------------------------------------------------------
-// Destructor
-// --------------------------------------------------------
-ISimpleShader::~ISimpleShader()
-{
-	// Derived class destructors will call this class's CleanUp method
-}
+ISimpleShader::~ISimpleShader(){}
 
-// --------------------------------------------------------
-// Cleans up the variable table and buffers - Some things will
-// be handled by derived classes
-// --------------------------------------------------------
 void ISimpleShader::CleanUp()
 {
 	// Handle constant buffers and local data buffers
@@ -66,14 +45,6 @@ void ISimpleShader::CleanUp()
 	textureTable.clear();
 }
 
-// --------------------------------------------------------
-// Loads the specified shader and builds the variable table 
-// using shader reflection.
-//
-// shaderFile - A "wide string" specifying the compiled shader to load
-// 
-// Returns true if shader is loaded properly, false otherwise
-// --------------------------------------------------------
 bool ISimpleShader::LoadShaderFile(LPCWSTR shaderFile)
 {
 	// Load the shader to a blob and ensure it worked
@@ -215,13 +186,7 @@ bool ISimpleShader::LoadShaderFile(LPCWSTR shaderFile)
 	return true;
 }
 
-// --------------------------------------------------------
-// Helper for looking up a variable by name and also
-// verifying that it is the requested size
-// 
-// name - the name of the variable to look for
-// size - the size of the variable (for verification), or -1 to bypass
-// --------------------------------------------------------
+//Helper functions:
 SimpleShaderVariable* ISimpleShader::FindVariable(std::string name, int size)
 {
 	// Look for the key
@@ -243,9 +208,6 @@ SimpleShaderVariable* ISimpleShader::FindVariable(std::string name, int size)
 	return var;
 }
 
-// --------------------------------------------------------
-// Helper for looking up a constant buffer by name
-// --------------------------------------------------------
 SimpleConstantBuffer* ISimpleShader::FindConstantBuffer(std::string name)
 {
 	// Look for the key
@@ -345,7 +307,6 @@ void ISimpleShader::CopyBufferData(std::string bufferName)
 		cb->LocalDataBuffer, 0, 0);
 }
 
-
 // --------------------------------------------------------
 // Sets a variable by name with arbitrary data of the specified size
 //
@@ -355,6 +316,7 @@ void ISimpleShader::CopyBufferData(std::string bufferName)
 //
 // Returns true if data is copied, false if variable doesn't exist
 // --------------------------------------------------------
+
 bool ISimpleShader::SetData(std::string name, const void* data, unsigned int size)
 {
 	// Look for the variable and verify
@@ -513,7 +475,6 @@ const SimpleSRV* ISimpleShader::GetShaderResourceViewInfo(std::string name)
 	return result->second;
 }
 
-
 // --------------------------------------------------------
 // Gets info about an SRV in the shader (or null)
 //
@@ -527,7 +488,6 @@ const SimpleSRV* ISimpleShader::GetShaderResourceViewInfo(unsigned int index)
 	// Grab the bind index
 	return shaderResourceViews[index];
 }
-
 
 // --------------------------------------------------------
 // Gets info about a sampler in the shader (or null)
@@ -562,13 +522,10 @@ const SimpleSampler* ISimpleShader::GetSamplerInfo(unsigned int index)
 	return samplerStates[index];
 }
 
-
 // --------------------------------------------------------
 // Gets the number of constant buffers in this shader
 // --------------------------------------------------------
 unsigned int ISimpleShader::GetBufferCount() { return constantBufferCount; }
-
-
 
 // --------------------------------------------------------
 // Gets the size of a particular constant buffer, or -1
@@ -605,10 +562,6 @@ const SimpleConstantBuffer* ISimpleShader::GetBufferInfo(unsigned int index)
 	// Return the specific buffer
 	return &constantBuffers[index];
 }
-
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // ------ SIMPLE VERTEX SHADER ------------------------------------------------
@@ -860,7 +813,6 @@ bool SimpleVertexShader::SetSamplerState(std::string name, Microsoft::WRL::ComPt
 	// Success
 	return true;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // ------ SIMPLE PIXEL SHADER -------------------------------------------------

@@ -146,8 +146,8 @@ HRESULT DX11App::InitDirectX()
         deviceContext.GetAddressOf());//address of device context variable
     if (FAILED(hr)) return hr;
 
-    //Above function created Direct3D objects & resources, including back buffers
-    //This accesses one of the back buffers and places it in our backbuffer (texture) variable 
+    //Above function created Direct3D objects & resources, including textures
+    //This accesses one of the textures and places it in our backbuffer variable 
     swapChain->GetBuffer(
         0,
         __uuidof(ID3D11Texture2D),
@@ -164,7 +164,7 @@ HRESULT DX11App::InitDirectX()
         backBufferTexture->Release();
     }
 
-    //Description of texture to use for the depth-stencil buffer
+    //Description of depth buffer (texture) to use
     //Must be same size as the render target
     D3D11_TEXTURE2D_DESC depthStencilDesc = {};
     depthStencilDesc.Width = wndWidth;
@@ -179,9 +179,9 @@ HRESULT DX11App::InitDirectX()
     depthStencilDesc.SampleDesc.Count = 1;
     depthStencilDesc.SampleDesc.Quality = 0;
 
-    //Create the depth-stencil buffer texture
+    //Create the depth buffer
     device->CreateTexture2D(&depthStencilDesc, 0, &depthBufferTexture);
-    //Create a depth-stencil view
+    //Create a view for that buffer
     if (depthBufferTexture != 0)
     {
        device->CreateDepthStencilView(
@@ -211,37 +211,39 @@ HRESULT DX11App::InitDirectX()
     return S_OK; 
 }
 
-void DX11App::CreateBasicGeometry()
-{
-    XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-    Mesh* cubeMesh = new Mesh(GetPath(L"../Assets/Models/sphere.obj").c_str(), device);
-    myMeshes.push_back(cubeMesh);
-    Material* redMat = new Material(pixelShader,vertexShader,red);
-    myMaterials.push_back(redMat);
-    Entity* cubeEntity = new Entity(cubeMesh,redMat,mainCam);
-    myEntities.push_back(cubeEntity);
-}
-
 void DX11App::LoadShaders()
 {
     vertexShader = new SimpleVertexShader(device, deviceContext, GetPath(L"VertexShader.cso").c_str());
     pixelShader = new SimplePixelShader(device, deviceContext, GetPath(L"PixelShader.cso").c_str());
-    
 }
 
-//For game logic & user input later
+void DX11App::CreateBasicGeometry()
+{
+    Mesh* sphereMesh = new Mesh(GetPath(L"../Assets/Models/sphere.obj").c_str(), device);
+    myMeshes.push_back(sphereMesh);
+    Material* redMat = new Material(pixelShader,vertexShader,XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),0.3);
+    myMaterials.push_back(redMat);
+    Entity* sphereEntity = new Entity(sphereMesh,redMat,mainCam);
+    sphereEntity->GetTransform()->Scale(2, 2, 2);
+    sphereEntity->GetTransform()->Translate(0, 1, 0);
+    myEntities.push_back(sphereEntity);
+}
+
+//For game logic
 void DX11App::Update(float deltaTime, float totalTime)
 {
-    myEntities[0]->GetTransform()->Rotate(0, 0, deltaTime);
+    myEntities[0]->GetTransform()->Rotate(0, deltaTime, 0);
 }
 
 //Clear the screen, redraw everything, present to the user
 void DX11App::Draw(float deltaTime, float totalTime)
 {
-    const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };//background color for clearing
-
+    const float bgColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };//background color for clearing
+    //Send info needed for lighting to pixel shader
+    pixelShader->SetFloat3("ambientColor", (XMFLOAT3)bgColor);
+    pixelShader->SetFloat3("camPos", mainCam->GetPosition());
     //Clear the render target and depth buffer once per frame before drawing anything
-    deviceContext->ClearRenderTargetView(backBufferView.Get(), color);
+    deviceContext->ClearRenderTargetView(backBufferView.Get(), bgColor);
     deviceContext->ClearDepthStencilView(
         depthStencilView.Get(),
         D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
@@ -273,7 +275,8 @@ HRESULT DX11App::Run()
     MSG  msg;
     msg.message = WM_NULL;
     PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
-    LoadShaders(); CreateBasicGeometry();
+    LoadShaders(); 
+    CreateBasicGeometry();
     deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     /*From documentation:
      "...each iteration should choose to process new Windows messages if

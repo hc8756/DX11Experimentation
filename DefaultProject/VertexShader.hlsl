@@ -1,13 +1,19 @@
+/*Common data structures used in shaders:
+Scalar: int, bool, float
+Vector: float2, float3, float4 (16 bytes)
+Matrix: float3x3, float4x4 (matrix)*/
 
+//Shader cbuffer should match the constant buffer of information being passed into it
+//Remember that buffer data must start at 16-byte mark
 cbuffer ExternalData : register(b0)
 {
 	matrix world;
 	matrix view;
 	matrix projection;
 }
-// Struct representing a single vertex worth of data
-// This should match the vertex definition in our C++ code (look at LoadShaders() code)
 
+//This struct represents a vertex we are getting from pipeline (input)
+//This struct should match our definition of a vertex 
 struct VertexShaderInput
 {
 	float3 localPosition	: POSITION;
@@ -15,37 +21,30 @@ struct VertexShaderInput
 	float3 normal			: NORMAL;
 };
 
-// Struct representing the data we're sending down the pipeline
-// - Should match our pixel shader's input (hence the name: Vertex to Pixel)
-// - At a minimum, we need a piece of data defined tagged as SV_POSITION
-// - The name of the struct itself is unimportant, but should be descriptive
-// - Each variable must have a semantic, which defines its usage
+//This struct represents information we are sending to pixel shader (output)
+//This should match the VertexToPixel struct in the pixel shader
 struct VertexToPixel
 {
 	float4 screenPosition	: SV_POSITION;
 	float2 uv				: TEXCOORD;
 	float3 normal			: NORMAL;
+	float3 worldPosition	: WORLD_POSITION;
 };
 
-// --------------------------------------------------------
-// The entry point (main method) for our vertex shader
-// 
-// - Input is exactly one vertex worth of data (defined by a struct)
-// - Output is a single struct of data to pass down the pipeline
-// - Named "main" because that's the default the shader compiler looks for
-// --------------------------------------------------------
 VertexToPixel main(VertexShaderInput input)
 {
-	// Set up output struct
+	//Set up output struct
 	VertexToPixel output;
 
-	// Calculate screen position of this vertex
+	//Calculate screen position of this vertex 
 	matrix wvp = mul(projection, mul(view, world));
 	output.screenPosition = mul(wvp, float4(input.localPosition, 1.0f));
 
-	// Pass other data through (for now)
+	//Pass other input data through 
 	output.uv = input.uv;
-	output.normal = input.normal; // This will need to be transformed for proper lighting
+	output.normal = mul((float3x3)wvp, input.normal); 
+	output.normal = normalize(output.normal);//normal is transformed & normalized for lighting
+	output.worldPosition = mul(world, float4(input.localPosition, 1.0f)).xyz;
 
 	return output;
 }

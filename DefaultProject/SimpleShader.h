@@ -1,3 +1,4 @@
+//Source code: https://github.com/vixorien/SimpleShader
 #pragma once
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3dcompiler.lib")
@@ -149,16 +150,6 @@ protected:
 	// Helpers for finding data by name
 	SimpleShaderVariable* FindVariable(std::string name, int size);
 	SimpleConstantBuffer* FindConstantBuffer(std::string name);
-
-	// Error logging
-	void Log(std::string message, WORD color);
-	void LogW(std::wstring message, WORD color);
-	void Log(std::string message);
-	void LogW(std::wstring message);
-	void LogError(std::string message);
-	void LogErrorW(std::wstring message);
-	void LogWarning(std::string message);
-	void LogWarningW(std::wstring message);
 };
 
 // --------------------------------------------------------

@@ -1,10 +1,11 @@
 #include "Material.h"
 
-Material::Material(SimplePixelShader* ps, SimpleVertexShader* vs, DirectX::XMFLOAT4 tint)
+Material::Material(SimplePixelShader* ps, SimpleVertexShader* vs, DirectX::XMFLOAT4 tint,float r)
 { 
 	matPS = ps;
 	matVS = vs;
 	matTint = tint;
+	roughness = r;
 }
 
 SimplePixelShader* Material::GetMatPS()
@@ -20,6 +21,11 @@ SimpleVertexShader* Material::GetMatVS()
 DirectX::XMFLOAT4 Material::GetMatTint()
 {
 	return matTint;
+}
+
+float Material::GetMatRough()
+{
+	return roughness;
 }
 
 void Material::SetMatPS(SimplePixelShader* ps)

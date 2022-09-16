@@ -18,7 +18,6 @@
 #include "Entity.h"
 #include "Material.h"
 #include "Camera.h"
-#include "BufferStruct.h"
 #include "SimpleShader.h"
 //For path getting stuff 
 #include <string>
@@ -78,8 +77,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthBufferTexture;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView;
 	//Shader related data
-	SimplePixelShader* pixelShader;
-	SimpleVertexShader* vertexShader;
+	SimplePixelShader* pixelShader=NULL;
+	SimpleVertexShader* vertexShader=NULL;
 	//Direct3D device metadata
 	D3D_FEATURE_LEVEL dxFeatureLevel= D3D_FEATURE_LEVEL_11_0;
 	
