@@ -24,6 +24,9 @@
 #include <sstream>
 //To use vectors
 #include <vector>
+//Use DirectX toolkit to load textures
+//Installation: Tools > NuGet Package Manager > Manage... > Browse(loop up toolkit) > select project & install
+#include "WICTextureLoader.h"
 
 class DX11App
 {
@@ -79,6 +82,7 @@ private:
 	//Shader related data
 	SimplePixelShader* pixelShader=NULL;
 	SimpleVertexShader* vertexShader=NULL;
+	Microsoft::WRL::ComPtr <ID3D11SamplerState> samplerState;//contains information on how texture info will be interpreted
 	//Direct3D device metadata
 	D3D_FEATURE_LEVEL dxFeatureLevel= D3D_FEATURE_LEVEL_11_0;
 	
@@ -93,11 +97,11 @@ private:
 
 	//Create camera
 	Camera* mainCam;
-	//Create vector of mesh & entity pointers 
+	//Create vectors of resource pointers 
+	//These are pointers so that they aren't destroyed when they are out of scope
 	std::vector<Mesh*> myMeshes;
 	std::vector<Entity*> myEntities;
 	std::vector<Material*> myMaterials;
-	//These are pointers so that they aren't destroyed when they are out of scope
 	
 	//Misc:
 	bool vsync=false;

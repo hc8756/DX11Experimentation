@@ -6,18 +6,19 @@
 class Material
 {
 public:
-	Material(SimplePixelShader* ps, SimpleVertexShader* vs, DirectX::XMFLOAT4 tint, float r);
+	Material(SimplePixelShader* ps, SimpleVertexShader* vs, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dSRV, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> sSRV, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rSRV);
 	SimplePixelShader* GetMatPS();
 	SimpleVertexShader* GetMatVS();
-	DirectX::XMFLOAT4 GetMatTint();
-	float GetMatRough();
+	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> GetDiffSRV();
+	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> GetSpecSRV();
+	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> GetRoughSRV();
 	void SetMatPS(SimplePixelShader* ps);
 	void SetMatVS(SimpleVertexShader* vs);
-	void SetMatTint(DirectX::XMFLOAT4 tint);
 private:
 	SimplePixelShader* matPS;
 	SimpleVertexShader* matVS;
-	DirectX::XMFLOAT4 matTint;
-	float roughness;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> diffSRV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> specSRV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughSRV;
 };
 

@@ -2,13 +2,17 @@
 
 cbuffer ExternalData : register(b0)
 {
-	//Material info
-	float4 colorTint;
-	float roughness;
 	//Scene info
 	float3 ambientColor;
+	float padding1;
 	float3 camPos;
+	float padding2;
 }
+
+SamplerState BasicSamplerState : register(s0);
+Texture2D DiffuseTexture : register(t0);
+Texture2D SpecularTexture : register(t1);
+Texture2D RoughnessTexture : register(t2);
 
 //Input
 struct VertexToPixel
@@ -21,6 +25,11 @@ struct VertexToPixel
 
 float4 main(VertexToPixel input) : SV_TARGET
 {
+	//Sample color and specularity values from texture
+	float3 surfaceColor = DiffuseTexture.Sample(BasicSamplerState, input.uv).rgb;
+	float specVal = SpecularTexture.Sample(BasicSamplerState, input.uv).r;
+	float roughness = RoughnessTexture.Sample(BasicSamplerState, input.uv).r;
+
 	//Variables of directional light 
 	float3 dirToLightD=float3(-1,0,0);
 	float3 lightColorD=float3(1,1,1);
@@ -55,8 +64,8 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 reflectDirP = reflect(-dirToLightP, input.normal);
 	float RdotVD = saturate(dot(reflectDirD, dirToCam));
 	float RdotVP = saturate(dot(reflectDirP, dirToCam));
-	float3 specularTermD = pow(RdotVD, shine) * lightColorD * lightIntensityD;
-	float3 specularTermP = pow(RdotVP, shine) * lightColorP * lightIntensityP * atten;
+	float3 specularTermD = pow(RdotVD, shine) * lightColorD * lightIntensityD * specVal;
+	float3 specularTermP = pow(RdotVP, shine) * lightColorP * lightIntensityP * specVal * atten;
 
-	return float4(specularTermD+specularTermP+colorTint*(ambientTerm+diffuseTermD+diffuseTermP),1);
+	return float4(specularTermD+specularTermP+surfaceColor*(ambientTerm+diffuseTermD+diffuseTermP),1);
 }

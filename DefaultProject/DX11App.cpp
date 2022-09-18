@@ -2,6 +2,7 @@
 
 DX11App* DX11App::DX11AppInstance = 0;
 using namespace DirectX;
+const float bgColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };//background color for clearing
 
 DX11App::DX11App(HINSTANCE hInstance, unsigned int wndWidth, unsigned int wndHeight)
 {
@@ -21,7 +22,7 @@ DX11App::DX11App(HINSTANCE hInstance, unsigned int wndWidth, unsigned int wndHei
     QueryPerformanceFrequency((LARGE_INTEGER*)&freq);//this function takes pointer to large int and fills with counts/sec
     secsInCount = 1.0 / (double)freq;//inverse is secs/count
     //Create a camera
-    mainCam = new Camera(XMFLOAT3(0.0f, 2.0f, -15.0f),float(wndWidth/wndHeight), XM_PIDIV4, 0.01f, 100.0f);
+    mainCam = new Camera(XMFLOAT3(0.0f, 2.0f, -10.0f),float(wndWidth/wndHeight), XM_PIDIV4, 0.01f, 100.0f);
 }
 
 DX11App::~DX11App()
@@ -153,8 +154,7 @@ HRESULT DX11App::InitDirectX()
         __uuidof(ID3D11Texture2D),
         (void**)&backBufferTexture);
     
-    //In Direct3D, a view is a way to access a buffer
-    //Here we create a view for our back buffer
+    //Create a view for backbuffer
     if (backBufferTexture != 0)
     {
         device->CreateRenderTargetView(
@@ -213,17 +213,44 @@ HRESULT DX11App::InitDirectX()
 
 void DX11App::LoadShaders()
 {
+   
     vertexShader = new SimpleVertexShader(device, deviceContext, GetPath(L"VertexShader.cso").c_str());
     pixelShader = new SimplePixelShader(device, deviceContext, GetPath(L"PixelShader.cso").c_str());
+    
+    //Create basic sampler state description
+    D3D11_SAMPLER_DESC samplerStateDesc = {};
+    //Address U,V,W determines how to map texture when uv coordinate is outside of 0~1 range
+    samplerStateDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; 
+    samplerStateDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerStateDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    samplerStateDesc.Filter = D3D11_FILTER_ANISOTROPIC;	
+    samplerStateDesc.MaxAnisotropy = 16;
+    samplerStateDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    //Create sampler state and bind to pipeline
+    device->CreateSamplerState(&samplerStateDesc,samplerState.GetAddressOf());
+    pixelShader->SetSamplerState("BasicSamplerState",samplerState);
 }
 
 void DX11App::CreateBasicGeometry()
-{
+{ 
+    //Create mesh
     Mesh* sphereMesh = new Mesh(GetPath(L"../Assets/Models/sphere.obj").c_str(), device);
     myMeshes.push_back(sphereMesh);
-    Material* redMat = new Material(pixelShader,vertexShader,XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),0.3);
-    myMaterials.push_back(redMat);
-    Entity* sphereEntity = new Entity(sphereMesh,redMat,mainCam);
+
+    //Create material
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> diffuseSRV;//allows shaders to access texture
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> specularSRV;//allows shaders to access texture
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughnessSRV;//allows shaders to access texture
+    //Create textures (& corresponding shader resource views) and bind to pipeline
+    //Link to images used: https://ambientcg.com/view?id=MetalPlates012 
+    CreateWICTextureFromFile(device.Get(), deviceContext.Get(), GetPath(L"../Assets/Textures/MetalPlates/MetalPlates012_2K_Color.png").c_str(), nullptr, &diffuseSRV);
+    CreateWICTextureFromFile(device.Get(), deviceContext.Get(), GetPath(L"../Assets/Textures/MetalPlates/MetalPlates012_2K_Metalness.png").c_str(), nullptr, &specularSRV);
+    CreateWICTextureFromFile(device.Get(), deviceContext.Get(), GetPath(L"../Assets/Textures/MetalPlates/MetalPlates012_2K_Roughness.png").c_str(), nullptr, &roughnessSRV);
+    Material* defaultMat = new Material(pixelShader,vertexShader, diffuseSRV, specularSRV, roughnessSRV);
+    myMaterials.push_back(defaultMat);
+
+    //Create entity out of mesh and material
+    Entity* sphereEntity = new Entity(sphereMesh, defaultMat, mainCam);
     sphereEntity->GetTransform()->Scale(2, 2, 2);
     sphereEntity->GetTransform()->Translate(0, 1, 0);
     myEntities.push_back(sphereEntity);
@@ -238,10 +265,6 @@ void DX11App::Update(float deltaTime, float totalTime)
 //Clear the screen, redraw everything, present to the user
 void DX11App::Draw(float deltaTime, float totalTime)
 {
-    const float bgColor[4] = { 0.4f, 0.6f, 0.75f, 0.0f };//background color for clearing
-    //Send info needed for lighting to pixel shader
-    pixelShader->SetFloat3("ambientColor", (XMFLOAT3)bgColor);
-    pixelShader->SetFloat3("camPos", mainCam->GetPosition());
     //Clear the render target and depth buffer once per frame before drawing anything
     deviceContext->ClearRenderTargetView(backBufferView.Get(), bgColor);
     deviceContext->ClearDepthStencilView(
@@ -275,9 +298,15 @@ HRESULT DX11App::Run()
     MSG  msg;
     msg.message = WM_NULL;
     PeekMessage(&msg, NULL, 0U, 0U, PM_NOREMOVE);
+
+    //Set scene
     LoadShaders(); 
     CreateBasicGeometry();
     deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //Send lighting info to pixel shader
+    pixelShader->SetFloat3("ambientColor", (XMFLOAT3)bgColor);
+    pixelShader->SetFloat3("camPos", mainCam->GetPosition());
+
     /*From documentation:
      "...each iteration should choose to process new Windows messages if
      they are available, and if no messages are in the queue it should
