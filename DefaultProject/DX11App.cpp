@@ -238,15 +238,18 @@ void DX11App::CreateBasicGeometry()
     myMeshes.push_back(sphereMesh);
 
     //Create material
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> diffuseSRV;//allows shaders to access texture
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> specularSRV;//allows shaders to access texture
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughnessSRV;//allows shaders to access texture
-    //Create textures (& corresponding shader resource views) and bind to pipeline
+    //Shader resource views allow shaders to access texture info
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> diffuseSRV;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> specularSRV;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughnessSRV;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> normalSRV;
+    //Create textures 
     //Link to images used: https://ambientcg.com/view?id=MetalPlates012 
     CreateWICTextureFromFile(device.Get(), deviceContext.Get(), GetPath(L"../Assets/Textures/MetalPlates/MetalPlates012_2K_Color.png").c_str(), nullptr, &diffuseSRV);
     CreateWICTextureFromFile(device.Get(), deviceContext.Get(), GetPath(L"../Assets/Textures/MetalPlates/MetalPlates012_2K_Metalness.png").c_str(), nullptr, &specularSRV);
     CreateWICTextureFromFile(device.Get(), deviceContext.Get(), GetPath(L"../Assets/Textures/MetalPlates/MetalPlates012_2K_Roughness.png").c_str(), nullptr, &roughnessSRV);
-    Material* defaultMat = new Material(pixelShader,vertexShader, diffuseSRV, specularSRV, roughnessSRV);
+    CreateWICTextureFromFile(device.Get(), deviceContext.Get(), GetPath(L"../Assets/Textures/MetalPlates/MetalPlates012_2K_NormalDX.png").c_str(), nullptr, &normalSRV);
+    Material* defaultMat = new Material(pixelShader,vertexShader, diffuseSRV, specularSRV, roughnessSRV, normalSRV);
     myMaterials.push_back(defaultMat);
 
     //Create entity out of mesh and material

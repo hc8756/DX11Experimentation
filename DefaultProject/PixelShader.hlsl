@@ -13,6 +13,7 @@ SamplerState BasicSamplerState : register(s0);
 Texture2D DiffuseTexture : register(t0);
 Texture2D SpecularTexture : register(t1);
 Texture2D RoughnessTexture : register(t2);
+Texture2D NormalTexture : register(t3);
 
 //Input
 struct VertexToPixel
@@ -21,6 +22,7 @@ struct VertexToPixel
 	float2 uv				: TEXCOORD;
 	float3 normal			: NORMAL;
 	float3 worldPosition	: WORLD_POSITION;
+	float3 tangent			: TANGENT;
 };
 
 float4 main(VertexToPixel input) : SV_TARGET
@@ -29,18 +31,19 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 surfaceColor = DiffuseTexture.Sample(BasicSamplerState, input.uv).rgb;
 	float specVal = SpecularTexture.Sample(BasicSamplerState, input.uv).r;
 	float roughness = RoughnessTexture.Sample(BasicSamplerState, input.uv).r;
+	float3 unpackedNormal= NormalTexture.Sample(BasicSamplerState, input.uv).rgb*2-1;
 
 	//Variables of directional light 
 	float3 dirToLightD=float3(-1,0,0);
 	float3 lightColorD=float3(1,1,1);
-	float lightIntensityD=1.0;
+	float lightIntensityD=1.8;
 
 	//Variables of point light 
 	float3 lightPosP = float3(5, 2, 0);
 	float3 dirToLightP = normalize(lightPosP - input.worldPosition);
 	float3 disToLightP = distance(lightPosP, input.worldPosition);
 	float3 lightColorP = float3(1, 1, 1);
-	float lightIntensityP = 0.5;
+	float lightIntensityP = 1.5;
 	//Attenuation calculations for point light
 	float lightRangeP = 5.0f; 
 	float atten = lightRangeP/(disToLightP* disToLightP);
@@ -48,7 +51,14 @@ float4 main(VertexToPixel input) : SV_TARGET
 	//Scene variables
 	float3 dirToCam = normalize(camPos - input.worldPosition);
 	float shine = (1 - roughness) * MAX_SPECULAR_EXPONENT;
-	input.normal = normalize(input.normal);//re-normalize interpolated normals
+
+	//Normal calculations
+	float3 N = normalize(input.normal); 
+	float3 T = normalize(input.tangent);
+	T = normalize(T - N * dot(T, N)); 
+	float3 B = cross(T, N);
+	float3x3 TBN = float3x3(T, B, N);
+	input.normal = mul(unpackedNormal, TBN);
 	
 	/*Lighting equations*/
 	//Ambient term 

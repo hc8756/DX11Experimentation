@@ -19,6 +19,7 @@ struct VertexShaderInput
 	float3 localPosition	: POSITION;
 	float2 uv				: TEXCOORD;
 	float3 normal			: NORMAL;
+	float3 tangent			: TANGENT;
 };
 
 //This struct represents information we are sending to pixel shader (output)
@@ -29,6 +30,7 @@ struct VertexToPixel
 	float2 uv				: TEXCOORD;
 	float3 normal			: NORMAL;
 	float3 worldPosition	: WORLD_POSITION;
+	float3 tangent			: TANGENT;
 };
 
 VertexToPixel main(VertexShaderInput input)
@@ -36,9 +38,10 @@ VertexToPixel main(VertexShaderInput input)
 	//Set up output struct
 	VertexToPixel output;
 
-	//Calculate screen position of this vertex 
+	//Calculate screen position & tangent of this vertex after transformations
 	matrix wvp = mul(projection, mul(view, world));
 	output.screenPosition = mul(wvp, float4(input.localPosition, 1.0f));
+	output.tangent = mul(wvp, float4(input.tangent, 1.0f));
 
 	//Pass other input data through 
 	output.uv = input.uv;

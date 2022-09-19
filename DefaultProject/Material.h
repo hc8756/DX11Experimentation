@@ -6,12 +6,13 @@
 class Material
 {
 public:
-	Material(SimplePixelShader* ps, SimpleVertexShader* vs, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dSRV, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> sSRV, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rSRV);
+	Material(SimplePixelShader* ps, SimpleVertexShader* vs, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dSRV, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> sSRV, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rSRV, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> nSRV);
 	SimplePixelShader* GetMatPS();
 	SimpleVertexShader* GetMatVS();
 	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> GetDiffSRV();
 	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> GetSpecSRV();
 	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> GetRoughSRV();
+	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> GetNormSRV();
 	void SetMatPS(SimplePixelShader* ps);
 	void SetMatVS(SimpleVertexShader* vs);
 private:
@@ -20,5 +21,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> diffSRV;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> specSRV;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> roughSRV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> normSRV;
 };
 
