@@ -31,7 +31,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 surfaceColor = DiffuseTexture.Sample(BasicSamplerState, input.uv).rgb;
 	float specVal = SpecularTexture.Sample(BasicSamplerState, input.uv).r;
 	float roughness = RoughnessTexture.Sample(BasicSamplerState, input.uv).r;
-	float3 unpackedNormal= NormalTexture.Sample(BasicSamplerState, input.uv).rgb*2-1;
+	float3 unpackedNormal = NormalTexture.Sample(BasicSamplerState, input.uv).rgb*2-1;
 
 	//Variables of directional light 
 	float3 dirToLightD=float3(-1,0,0);
@@ -46,11 +46,11 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float lightIntensityP = 1.5;
 	//Attenuation calculations for point light
 	float lightRangeP = 5.0f; 
-	float atten = lightRangeP/(disToLightP* disToLightP);
+	float atten = lightRangeP/(disToLightP * disToLightP);
 
 	//Scene variables
 	float3 dirToCam = normalize(camPos - input.worldPosition);
-	float shine = (1 - roughness) * MAX_SPECULAR_EXPONENT;
+	float shine = (1.0001 - roughness) * MAX_SPECULAR_EXPONENT;
 
 	//Normal calculations
 	float3 N = normalize(input.normal); 
@@ -77,5 +77,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 specularTermD = pow(RdotVD, shine) * lightColorD * lightIntensityD * specVal;
 	float3 specularTermP = pow(RdotVP, shine) * lightColorP * lightIntensityP * specVal * atten;
 
-	return float4(specularTermD+specularTermP+surfaceColor*(ambientTerm+diffuseTermD+diffuseTermP),1);
+	float3 totalColor =  surfaceColor * (ambientTerm + diffuseTermD + diffuseTermP +specularTermD + specularTermP);
+	//raised to a power for gamma correction
+	return float4(pow(totalColor, 1.0f / 1.5f),1);
 }

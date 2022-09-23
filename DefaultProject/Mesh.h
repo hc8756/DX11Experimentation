@@ -19,10 +19,10 @@ public:
 	int GetIndexCount();
 	
 private:
+	void CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices);
 	//Buffers to hold mesh data
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
 	//Size of index buffer (used when drawing)
 	int ibSize=0;
-	void CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices);
 };
