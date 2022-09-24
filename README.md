@@ -1,12 +1,7 @@
 # MyDX11Code
 <pre>
 Base project used to experiment with DirectX11
-Features 3D mesh with a texture, albedo, and normal map and lighting
+Features 3D mesh with textures for color, specularity, roughness, bumps, and ambient occlusion
 I used...
-Code from Microsoft documentation:
-  Project initialization: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/work-with-dxgi
-  Setting up rendering pipeline: https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/understand-the-directx-11-2-graphics-pipeline
-Other resources:
-https://docs.microsoft.com/en-us/windows/win32/direct3dgetstarted/complete-code-sample-for-using-a-corewindow-with-directx
-https://github.com/vixorien/DX11Starter
+Code from Microsoft documentation & class resources (https://github.com/vixorien/DX11Starter)
 </pre>
