@@ -14,6 +14,7 @@ Texture2D DiffuseTexture : register(t0);
 Texture2D SpecularTexture : register(t1);
 Texture2D RoughnessTexture : register(t2);
 Texture2D NormalTexture : register(t3);
+Texture2D AOTexture : register(t4);
 
 //Input
 struct VertexToPixel
@@ -32,6 +33,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float specVal = SpecularTexture.Sample(BasicSamplerState, input.uv).r;
 	float roughness = RoughnessTexture.Sample(BasicSamplerState, input.uv).r;
 	float3 unpackedNormal = NormalTexture.Sample(BasicSamplerState, input.uv).rgb*2-1;
+	float aoColor= saturate(pow(AOTexture.Sample(BasicSamplerState, input.uv).r,2));
 
 	//Variables of directional light 
 	float3 dirToLightD=float3(-1,0,0);
@@ -39,13 +41,13 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float lightIntensityD=1.8;
 
 	//Variables of point light 
-	float3 lightPosP = float3(5, 2, 0);
+	float3 lightPosP = float3(5, 2, -5);
 	float3 dirToLightP = normalize(lightPosP - input.worldPosition);
 	float3 disToLightP = distance(lightPosP, input.worldPosition);
 	float3 lightColorP = float3(1, 1, 1);
-	float lightIntensityP = 1.5;
+	float lightIntensityP = 1.8;
 	//Attenuation calculations for point light
-	float lightRangeP = 5.0f; 
+	float lightRangeP = 8.0f; 
 	float atten = lightRangeP/(disToLightP * disToLightP);
 
 	//Scene variables
@@ -77,7 +79,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 specularTermD = pow(RdotVD, shine) * lightColorD * lightIntensityD * specVal;
 	float3 specularTermP = pow(RdotVP, shine) * lightColorP * lightIntensityP * specVal * atten;
 
-	float3 totalColor =  surfaceColor * (ambientTerm + diffuseTermD + diffuseTermP +specularTermD + specularTermP);
+	float3 totalColor =  surfaceColor * aoColor * (ambientTerm + diffuseTermD + diffuseTermP + specularTermD + specularTermP);
 	//raised to a power for gamma correction
 	return float4(pow(totalColor, 1.0f / 1.5f),1);
 }

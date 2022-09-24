@@ -4,7 +4,8 @@ Material::Material(SimplePixelShader* ps, SimpleVertexShader* vs,
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> dSRV, 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> sSRV, 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rSRV,
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> nSRV)
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> nSRV,
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> aSRV)
 { 
 	matPS = ps;
 	matVS = vs;
@@ -12,6 +13,7 @@ Material::Material(SimplePixelShader* ps, SimpleVertexShader* vs,
 	specSRV = sSRV;
 	roughSRV = rSRV;
 	normSRV = nSRV;
+	aoSRV = aSRV;
 }
 
 SimplePixelShader* Material::GetMatPS()
@@ -42,6 +44,11 @@ Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Material::GetRoughSRV()
 Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Material::GetNormSRV()
 {
 	return normSRV;
+}
+
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Material::GetAOSRV()
+{
+	return aoSRV;
 }
 
 void Material::SetMatPS(SimplePixelShader* ps)

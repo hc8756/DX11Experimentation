@@ -26,6 +26,7 @@ void Entity::Draw(Microsoft::WRL::ComPtr<ID3D11DeviceContext> pDeviceContext)
     entityMaterial->GetMatPS()->SetShaderResourceView("DiffuseTexture", entityMaterial->GetDiffSRV());
     entityMaterial->GetMatPS()->SetShaderResourceView("SpecularTexture", entityMaterial->GetSpecSRV());
     entityMaterial->GetMatPS()->SetShaderResourceView("NormalTexture", entityMaterial->GetNormSRV());
+    entityMaterial->GetMatPS()->SetShaderResourceView("AOTexture", entityMaterial->GetAOSRV());
     entityMaterial->GetMatPS()->CopyAllBufferData();
     //Feed geometry info into pipeline
 	UINT stride = sizeof(Vertex);
